@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏢</text></svg>">
+<title>MeetSpace — ระบบจัดการห้องประชุม</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Syne:wght@600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F5F3EF;--surface:#FFFFFF;--surface2:#F9F7F4;--surface3:#F2EFE8;
+  --text:#1A1814;--text2:#6B6760;--text3:#A39F9A;
+  --amber:#C97B1A;--amber-light:#FAC775;--amber-bg:#FAEEDA;--amber-dark:#A06010;
+  --border:#E5E2DC;--border2:#D0CDC6;
+  --green:#3B6D11;--green-bg:#EAF3DE;--green-mid:#639922;
+  --red:#A32D2D;--red-bg:#FCEBEB;
+  --blue:#185FA5;--blue-bg:#E6F1FB;
+  --purple:#533AB7;--purple-bg:#EDE9FB;
+  --radius:10px;--radius-lg:16px;--radius-xl:20px;
+  --live:#D85A30;--live-bg:#FAECE7;
+  --shadow:0 2px 12px rgba(26,24,20,.07);
+  --shadow-md:0 4px 24px rgba(26,24,20,.10);
+  --shadow-lg:0 8px 40px rgba(26,24,20,.13);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased}
+.app{display:grid;grid-template-columns:268px 1fr;min-height:100vh}
+
+/* ─── SIDEBAR ─── */
+.sidebar{background:var(--text);display:flex;flex-direction:column;overflow:hidden;position:sticky;top:0;height:100vh}
+.logo{padding:24px 22px 20px;border-bottom:1px solid #2C2C2A}
+.logo-mark{display:flex;align-items:center;gap:10px}
+.logo-icon{width:34px;height:34px;background:var(--amber);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-icon svg{width:18px;height:18px;fill:#fff}
+.logo-text .logo-title{font-family:'Syne',sans-serif;font-size:17px;color:#F9F7F4;font-weight:700;letter-spacing:-.3px;line-height:1.1}
+.logo-text .logo-sub{font-size:10.5px;color:#6B6760;margin-top:2px;text-transform:uppercase;letter-spacing:1.5px}
+.clock-box{padding:16px 22px;border-bottom:1px solid #2C2C2A}
+.clock-time{font-family:'DM Mono',monospace;font-size:28px;color:#F1EFE8;font-weight:500;letter-spacing:1.5px;line-height:1}
+.clock-date{font-size:11px;color:#6B6760;margin-top:5px}
+.nav{padding:16px 14px;flex:1;overflow-y:auto}
+.nav-label{font-size:10px;color:#444441;text-transform:uppercase;letter-spacing:1.5px;padding:0 8px;margin-bottom:8px;font-weight:500;margin-top:8px}
+.nav-label:first-child{margin-top:0}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;color:#B4B2A9;font-size:13.5px;transition:all .15s;margin-bottom:3px;position:relative;user-select:none}
+.nav-item:hover{background:#2C2C2A;color:#F1EFE8}
+.nav-item.active{background:var(--amber);color:#fff}
+.nav-item.active .nav-icon{opacity:1}
+.nav-badge{position:absolute;right:10px;background:var(--live);color:#fff;font-size:10px;font-weight:600;padding:1px 6px;border-radius:20px;min-width:18px;text-align:center}
+.nav-icon{width:16px;height:16px;flex-shrink:0;opacity:.7}
+.nav-item.active .nav-badge{background:rgba(255,255,255,.25);color:#fff}
+.sidebar-stats{padding:14px;border-top:1px solid #2C2C2A;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-mini{background:#2C2C2A;border-radius:8px;padding:10px 12px}
+.stat-mini-label{font-size:10px;color:#888780;margin-bottom:4px;text-transform:uppercase;letter-spacing:.8px}
+.stat-mini-num{font-family:'Syne',sans-serif;font-size:20px;color:#F1EFE8;font-weight:600;line-height:1}
+.stat-mini-badge{font-size:9.5px;margin-top:4px;font-weight:500}
+.stat-mini.available .stat-mini-badge{color:#C0DD97}
+.stat-mini.booked .stat-mini-badge{color:var(--amber-light)}
+
+/* ─── MAIN CONTENT ─── */
+.main{overflow-y:auto;padding:30px 36px;background:var(--bg);min-height:100vh}
+.top-bar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;gap:16px}
+.page-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:700;color:var(--text);line-height:1.1}
+.page-sub{font-size:13px;color:var(--text2);margin-top:5px}
+.top-actions{display:flex;gap:10px;align-items:center;flex-shrink:0;flex-wrap:wrap}
+
+/* ─── STAT CARDS ─── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;box-shadow:var(--shadow)}
+.stat-card-num{font-family:'Syne',sans-serif;font-size:28px;font-weight:700;line-height:1;margin-bottom:6px}
+.stat-card-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;font-weight:500}
+.stat-card-trend{font-size:11px;margin-top:6px;display:flex;align-items:center;gap:4px}
+
+/* ─── LIVE BANNER ─── */
+.live-banner{background:linear-gradient(135deg,#1A1814 0%,#2C2216 100%);border-radius:var(--radius-xl);padding:22px 26px;margin-bottom:20px;border:1px solid #3D2A10;position:relative;overflow:hidden}
+.live-banner::before{content:'';position:absolute;right:-40px;top:-40px;width:160px;height:160px;background:var(--amber);opacity:.06;border-radius:50%}
+.live-banner::after{content:'';position:absolute;right:40px;top:20px;width:80px;height:80px;background:var(--amber-light);opacity:.04;border-radius:50%}
+.live-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.pulse-dot{width:9px;height:9px;border-radius:50%;background:var(--live);flex-shrink:0;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.75)}}
+.live-label{font-size:11px;font-weight:700;color:var(--live);text-transform:uppercase;letter-spacing:1.8px}
+.live-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 0;border-top:1px solid rgba(255,255,255,.05)}
+.live-row:first-child{border-top:none;padding-top:0}
+.live-info{flex:1;min-width:0}
+.live-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#F1EFE8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.live-meta{font-size:12px;color:#888780;margin-top:3px}
+.live-timer{font-family:'DM Mono',monospace;font-size:13px;color:var(--amber-light);font-weight:500;flex-shrink:0;background:rgba(201,123,26,.15);padding:4px 10px;border-radius:6px}
+.progress-mini{width:100%;height:4px;background:rgba(255,255,255,.07);border-radius:4px;margin-top:8px;overflow:hidden}
+.progress-mini-bar{height:100%;background:var(--amber);border-radius:4px;transition:width .5s ease}
+
+/* ─── SOON BANNER ─── */
+.soon-banner{background:var(--amber-bg);border:1px solid var(--amber-light);border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:18px}
+.soon-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.soon-label{font-size:11px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:1.5px}
+.soon-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid rgba(201,123,26,.15)}
+.soon-row:last-child{border-bottom:none;padding-bottom:0}
+.soon-countdown{font-family:'DM Mono',monospace;font-size:12px;color:var(--amber);background:rgba(201,123,26,.12);padding:3px 9px;border-radius:6px;font-weight:500;flex-shrink:0}
+
+/* ─── BUTTONS ─── */
+.btn{display:inline-flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:none;outline:none;transition:all .15s;white-space:nowrap;border-radius:var(--radius)}
+.btn svg{width:14px;height:14px;flex-shrink:0}
+.btn-primary{background:var(--text);color:#fff;padding:10px 20px}
+.btn-primary:hover{background:#2C2C2A;transform:translateY(-1px);box-shadow:var(--shadow)}
+.btn-amber{background:var(--amber);color:#fff;padding:9px 18px}
+.btn-amber:hover{background:var(--amber-dark);transform:translateY(-1px)}
+.btn-outline{background:var(--surface);border:1px solid var(--border);color:var(--text2);padding:8px 16px}
+.btn-outline:hover{border-color:var(--border2);color:var(--text);background:var(--surface2)}
+.btn-ghost{background:none;border:none;color:var(--text2);padding:6px 10px;font-size:12px}
+.btn-ghost:hover{color:var(--text);background:var(--surface2);border-radius:6px}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1.5px solid transparent;padding:6px 12px;font-size:12px}
+.btn-danger:hover{border-color:var(--red)}
+.btn-session{background:var(--amber);color:#fff;padding:9px 20px;font-size:13px;font-weight:600}
+.btn-session:hover{background:var(--amber-dark)}
+.btn-end-sm{background:var(--live-bg);color:var(--live);border:1.5px solid rgba(216,90,48,.2);padding:7px 14px;font-size:12px}
+.btn-end-sm:hover{border-color:var(--live)}
+.btn-lg{padding:12px 28px;font-size:14.5px;width:100%;justify-content:center;border-radius:var(--radius)}
+
+/* ─── ROOM CARDS ─── */
+.rooms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.room-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;cursor:pointer;transition:all .2s;box-shadow:var(--shadow)}
+.room-card:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.room-card.is-live{border-color:var(--live);box-shadow:0 0 0 4px var(--live-bg),var(--shadow-md)}
+.room-card.is-soon{border-color:var(--amber-light);box-shadow:0 0 0 4px var(--amber-bg)}
+.room-stripe{height:5px;width:100%}
+.room-header{padding:16px 18px 14px;border-bottom:1px solid var(--border)}
+.room-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px}
+.room-floor{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px}
+.room-status-badge{display:flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.status-live{background:var(--live-bg);color:var(--live)}
+.status-avail{background:var(--green-bg);color:var(--green)}
+.status-busy{background:var(--surface3);color:var(--text2)}
+.room-body{padding:14px 18px 16px}
+.room-caps{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.room-badge{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--text2);background:var(--surface2);padding:4px 9px;border-radius:20px;border:1px solid var(--border);font-weight:500}
+.amenity-tag{font-size:10.5px;background:var(--blue-bg);color:var(--blue);padding:2px 7px;border-radius:4px;font-weight:500}
+.time-slots-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:10px}
+.ts{font-size:10.5px;padding:3px 6px;border-radius:5px;border:1px solid;font-weight:500;user-select:none}
+.ts.av{background:var(--green-bg);color:var(--green);border-color:transparent}
+.ts.bk{background:var(--red-bg);color:var(--red);border-color:transparent}
+.ts.lv{background:var(--live);color:#fff;border-color:var(--live);animation:pulse 1.6s infinite}
+
+/* ─── BOOKING LIST ─── */
+.bookings-list{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.booking-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;display:flex;align-items:flex-start;gap:14px;transition:all .2s;box-shadow:var(--shadow)}
+.booking-card:hover{border-color:var(--border2);box-shadow:var(--shadow-md)}
+.booking-card.is-live{border-color:var(--live);box-shadow:0 0 0 3px var(--live-bg)}
+.booking-card.is-soon{border-color:var(--amber-light);box-shadow:0 0 0 3px var(--amber-bg)}
+.booking-stripe{width:5px;border-radius:3px;align-self:stretch;flex-shrink:0;min-height:48px}
+.booking-info{flex:1;min-width:0}
+.booking-title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px}
+.booking-title{font-weight:600;font-size:14px;color:var(--text)}
+.booking-meta{font-size:12px;color:var(--text2);line-height:1.5}
+.booking-tags{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+.tag{font-size:10.5px;padding:2px 8px;border-radius:4px;font-weight:500}
+.tag-room{background:var(--blue-bg);color:var(--blue)}
+.tag-food{background:var(--amber-bg);color:var(--amber)}
+.tag-live{background:var(--live-bg);color:var(--live)}
+.tag-soon{background:var(--amber-bg);color:var(--amber)}
+.tag-today{background:var(--blue-bg);color:var(--blue)}
+.booking-right{display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0}
+.booking-timer{font-family:'DM Mono',monospace;font-size:12.5px;font-weight:500}
+.empty-state{text-align:center;padding:64px 20px;color:var(--text3)}
+.empty-icon{font-size:42px;margin-bottom:12px}
+.empty-title{font-size:15px;font-weight:500;color:var(--text2);margin-bottom:6px}
+.empty-sub{font-size:12.5px}
+
+/* ─── BOOKING FORM ─── */
+.form-wrap{max-width:740px}
+.form-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:28px;box-shadow:var(--shadow)}
+.form-section{margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.form-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.form-section-title{font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.form-section-title::before{content:'';display:block;width:3px;height:14px;background:var(--amber);border-radius:2px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group label{font-size:11.5px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px}
+.form-group input,.form-group select,.form-group textarea{padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--text);background:var(--surface);transition:all .15s;outline:none}
+.form-group input:focus,.form-group select:focus{border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-bg)}
+.form-group input::placeholder{color:var(--text3)}
+
+/* TIME PICKER */
+.time-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:10px}
+.time-btn{padding:8px 4px;text-align:center;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);transition:all .12s;background:var(--surface);user-select:none}
+.time-btn:hover:not(.disabled){border-color:var(--amber-light);color:var(--amber)}
+.time-btn.selected{background:var(--amber);border-color:var(--amber);color:#fff;font-weight:600}
+.time-btn.disabled{background:var(--red-bg);color:var(--red);border-color:transparent;cursor:not-allowed;opacity:.7}
+.time-btn.in-range{background:var(--amber-bg);border-color:var(--amber-light);color:var(--amber)}
+.time-hint{font-size:12px;color:var(--text2);margin-bottom:8px;height:18px}
+
+/* CATERING */
+.catering-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px}
+.catering-item{border:1.5px solid var(--border);border-radius:var(--radius);padding:11px 13px;cursor:pointer;transition:all .15s;display:flex;align-items:flex-start;gap:10px;background:var(--surface)}
+.catering-item:hover{border-color:var(--border2);background:var(--surface2)}
+.catering-item.checked{border-color:var(--amber);background:var(--amber-bg)}
+.catering-check{width:18px;height:18px;border:1.5px solid var(--border2);border-radius:5px;margin-top:1px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.catering-item.checked .catering-check{background:var(--amber);border-color:var(--amber)}
+.check-mark{width:9px;height:9px;background:#fff;clip-path:polygon(14% 44%,0 65%,50% 100%,100% 16%,80% 0%,43% 62%);display:none}
+.catering-item.checked .check-mark{display:block}
+.catering-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.catering-desc{font-size:11px;color:var(--text2)}
+.catering-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+
+/* ─── SESSION VIEW ─── */
+.session-wrap{max-width:560px;margin:0 auto}
+.session-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:36px;text-align:center;box-shadow:var(--shadow-lg)}
+.session-room-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;font-weight:600}
+.session-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;color:var(--text);margin-bottom:6px}
+.session-host{font-size:13px;color:var(--text2);margin-bottom:30px}
+.session-clock{font-family:'DM Mono',monospace;font-size:60px;font-weight:500;color:var(--text);letter-spacing:2px;line-height:1;margin-bottom:6px}
+.session-clock-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:28px;font-weight:500}
+.session-progress-wrap{background:var(--bg);border-radius:20px;height:8px;margin-bottom:28px;overflow:hidden;border:1px solid var(--border)}
+.session-progress-bar{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--amber) 0%,var(--amber-light) 100%);transition:width .5s ease}
+.session-meta{display:flex;justify-content:center;gap:32px;margin-bottom:28px}
+.session-meta-item{text-align:center}
+.session-meta-val{font-size:16px;font-weight:600;color:var(--text)}
+.session-meta-key{font-size:10.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-top:3px}
+.catering-pills{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin-bottom:28px}
+.catering-pill{font-size:12px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-light);padding:4px 12px;border-radius:20px;font-weight:500}
+.session-actions{display:flex;gap:10px;justify-content:center}
+
+/* ─── DATE NAVIGATOR ─── */
+.date-nav{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;box-shadow:var(--shadow)}
+.date-nav-btn{background:none;border:none;cursor:pointer;color:var(--text2);font-size:18px;line-height:1;padding:0 4px;transition:color .12s}
+.date-nav-btn:hover{color:var(--text)}
+.date-nav-text{font-size:13px;font-weight:500;min-width:148px;text-align:center;color:var(--text)}
+
+/* ─── TOAST ─── */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--text);color:#fff;padding:13px 20px;border-radius:var(--radius-lg);font-size:13px;font-weight:500;display:none;z-index:9999;box-shadow:var(--shadow-lg);transform:translateY(8px);opacity:0;transition:all .25s}
+.toast.show{display:block;transform:translateY(0);opacity:1}
+
+/* ─── CHIPS / FILTERS ─── */
+.filter-row{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.filter-chip{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);transition:all .12s}
+.filter-chip:hover{border-color:var(--amber-light);color:var(--amber)}
+.filter-chip.active{background:var(--amber);border-color:var(--amber);color:#fff}
+
+/* ─── SEARCH ─── */
+.search-wrap{position:relative;flex:1;max-width:280px}
+.search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text3)}
+.search-input{width:100%;padding:8px 12px 8px 32px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--surface);outline:none;transition:border .15s}
+.search-input:focus{border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-bg)}
+.search-input::placeholder{color:var(--text3)}
+
+@media(max-width:900px){
+  .app{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .main{padding:20px 18px}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .time-grid{grid-template-columns:repeat(4,1fr)}
+  .catering-grid{grid-template-columns:1fr 1fr}
+}
+
+/* ─── AUTH MODAL ─── */
+.modal-overlay{position:fixed;inset:0;background:rgba(26,24,20,.55);z-index:1000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);opacity:0;transition:opacity .2s;visibility:hidden;pointer-events:none}
+.modal-overlay.show{opacity:1;visibility:visible;pointer-events:all}
+.modal-box{background:var(--surface);border-radius:var(--radius-xl);padding:36px;width:100%;max-width:400px;box-shadow:var(--shadow-lg);transform:translateY(16px);transition:transform .25s;border:1px solid var(--border)}
+.modal-overlay.show .modal-box{transform:translateY(0)}
+.modal-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px}
+.modal-sub{font-size:13px;color:var(--text2);margin-bottom:24px}
+.modal-tabs{display:flex;gap:0;background:var(--surface2);border-radius:8px;padding:3px;margin-bottom:24px;border:1px solid var(--border)}
+.modal-tab{flex:1;text-align:center;padding:7px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text2);transition:all .15s}
+.modal-tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(26,24,20,.1)}
+.modal-field{margin-bottom:14px}
+.modal-field label{display:block;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.modal-field input{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--text);background:var(--surface);outline:none;transition:border .15s}
+.modal-field input:focus{border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-bg)}
+.modal-err{font-size:12px;color:var(--red);background:var(--red-bg);padding:8px 12px;border-radius:8px;margin-bottom:14px;display:none}
+.modal-err.show{display:block}
+.modal-close{position:absolute;top:16px;right:18px;background:none;border:none;font-size:20px;color:var(--text2);cursor:pointer;line-height:1;padding:4px 6px;border-radius:6px}
+.modal-close:hover{background:var(--surface2);color:var(--text)}
+
+/* ─── USER BAR ─── */
+.user-bar{padding:12px 14px;border-top:1px solid #2C2C2A;display:flex;align-items:center;gap:9px}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--amber);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.user-name{flex:1;font-size:12.5px;color:#D0CDC6;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-role{font-size:10px;color:#888780}
+.btn-signout{background:none;border:1px solid #3A3A38;border-radius:6px;color:#888780;font-size:11px;padding:4px 8px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.btn-signout:hover{border-color:#888780;color:#D0CDC6}
+.btn-login-side{display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:8px;cursor:pointer;color:#B4B2A9;font-size:13px;background:rgba(201,123,26,.15);border:1px solid rgba(201,123,26,.3);margin:10px 14px;transition:all .15s;justify-content:center;font-weight:500}
+.btn-login-side:hover{background:rgba(201,123,26,.25);color:var(--amber-light)}
+
+/* ─── CONFIRM MODAL ─── */
+.confirm-modal-box{background:var(--surface);border-radius:var(--radius-xl);padding:0;width:100%;max-width:480px;box-shadow:var(--shadow-lg);transform:translateY(16px);transition:transform .25s;border:1px solid var(--border);overflow:hidden}
+.modal-overlay.show .confirm-modal-box{transform:translateY(0)}
+.confirm-header{background:linear-gradient(135deg,var(--amber) 0%,var(--amber-dark) 100%);padding:24px 28px 20px;position:relative}
+.confirm-header-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:#fff;margin-bottom:2px}
+.confirm-header-sub{font-size:12.5px;color:rgba(255,255,255,.75)}
+.confirm-room-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.2);border-radius:20px;padding:4px 12px;font-size:12px;color:#fff;font-weight:500;margin-top:10px}
+.confirm-body{padding:24px 28px}
+.confirm-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.confirm-row:last-child{border-bottom:none}
+.confirm-icon{font-size:15px;width:20px;flex-shrink:0;margin-top:1px}
+.confirm-label{font-size:11px;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px}
+.confirm-value{font-size:13.5px;color:var(--text);font-weight:500}
+.confirm-catering-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+.confirm-catering-pill{background:var(--amber-bg);border:1px solid var(--amber-light);border-radius:20px;padding:3px 10px;font-size:11.5px;color:var(--amber-dark);font-weight:500}
+.confirm-footer{padding:0 28px 24px;display:flex;gap:10px}
+.confirm-footer .btn{flex:1;justify-content:center}
+
+/* ─── ATTENDEES WARNING ─── */
+.attendees-warn{font-size:11.5px;color:var(--red);background:var(--red-bg);padding:5px 10px;border-radius:6px;margin-top:5px;display:none;align-items:center;gap:5px}
+.attendees-warn.show{display:flex}
+.cap-hint{font-size:11px;color:var(--text3);margin-top:4px}
+.member-gate{background:var(--amber-bg);border:1.5px solid var(--amber-light);border-radius:var(--radius-lg);padding:20px 24px;display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.member-gate-icon{font-size:28px;flex-shrink:0}
+.member-gate-text{flex:1}
+.member-gate-title{font-weight:600;font-size:14px;color:var(--amber-dark);margin-bottom:3px}
+.member-gate-sub{font-size:12.5px;color:var(--amber)}
+</style>
+</head>
+<body>
+
+<div class="app">
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">
+      <div class="logo-icon">
+        <svg viewBox="0 0 20 20"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></svg>
+      </div>
+      <div class="logo-text">
+        <div class="logo-title">MeetSpace</div>
+        <div class="logo-sub">ระบบจองห้องประชุม</div>
+      </div>
+    </div>
+  </div>
+  <div class="clock-box">
+    <div class="clock-time" id="clock-time">--:--:--</div>
+    <div class="clock-date" id="clock-date">--</div>
+  </div>
+  <div class="nav">
+    <div class="nav-label">เมนูหลัก</div>
+    <div class="nav-item active" onclick="switchView('rooms')" id="nav-rooms">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1.2"/><rect x="9" y="1" width="6" height="6" rx="1.2"/><rect x="1" y="9" width="6" height="6" rx="1.2"/><rect x="9" y="9" width="6" height="6" rx="1.2"/></svg>
+      ห้องประชุม
+    </div>
+    <div class="nav-item" onclick="switchView('bookings')" id="nav-bookings">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><line x1="5" y1="1" x2="5" y2="5"/><line x1="11" y1="1" x2="11" y2="5"/><line x1="2" y1="7" x2="14" y2="7"/></svg>
+      การจองทั้งหมด
+      <span class="nav-badge" id="badge-live" style="display:none">0</span>
+    </div>
+    <div class="nav-item" onclick="switchView('new')" id="nav-new">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/></svg>
+      จองห้องใหม่
+    </div>
+    <div class="nav-label" style="margin-top:16px">ข้อมูล</div>
+    <div class="nav-item" onclick="switchView('report')" id="nav-report">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="1" width="12" height="14" rx="1.5"/><line x1="5" y1="5" x2="11" y2="5"/><line x1="5" y1="8" x2="11" y2="8"/><line x1="5" y1="11" x2="9" y2="11"/></svg>
+      รายงาน
+    </div>
+  </div>
+  <div id="sidebar-user-area"></div>
+  <div class="sidebar-stats">
+    <div class="stat-mini available">
+      <div class="stat-mini-label">ว่างวันนี้</div>
+      <div class="stat-mini-num" id="avail-num">—</div>
+      <div class="stat-mini-badge">ห้อง</div>
+    </div>
+    <div class="stat-mini booked">
+      <div class="stat-mini-label">จองวันนี้</div>
+      <div class="stat-mini-num" id="today-num">—</div>
+      <div class="stat-mini-badge">รายการ</div>
+    </div>
+  </div>
+</div>
+
+<div class="main" id="main-content"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- CONFIRM BOOKING MODAL -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="confirm-modal-box">
+    <div class="confirm-header">
+      <div class="confirm-header-title" id="cm-title">—</div>
+      <div class="confirm-header-sub">สรุปรายละเอียดการจองห้องประชุม</div>
+      <div class="confirm-room-badge" id="cm-room-badge">🏢 —</div>
+    </div>
+    <div class="confirm-body">
+      <div class="confirm-row">
+        <div class="confirm-icon">📅</div>
+        <div><div class="confirm-label">วันที่ / เวลา</div><div class="confirm-value" id="cm-datetime">—</div></div>
+      </div>
+      <div class="confirm-row">
+        <div class="confirm-icon">👤</div>
+        <div><div class="confirm-label">ผู้จอง</div><div class="confirm-value" id="cm-host">—</div></div>
+      </div>
+      <div class="confirm-row">
+        <div class="confirm-icon">👥</div>
+        <div><div class="confirm-label">จำนวนผู้เข้าร่วม</div><div class="confirm-value" id="cm-attendees">—</div></div>
+      </div>
+      <div class="confirm-row" id="cm-catering-row">
+        <div class="confirm-icon">🍽</div>
+        <div style="flex:1">
+          <div class="confirm-label">อาหารว่าง / เครื่องดื่ม</div>
+          <div class="confirm-catering-list" id="cm-catering">—</div>
+        </div>
+      </div>
+      <div class="confirm-row" id="cm-notes-row" style="display:none">
+        <div class="confirm-icon">📝</div>
+        <div><div class="confirm-label">หมายเหตุ</div><div class="confirm-value" id="cm-notes">—</div></div>
+      </div>
+    </div>
+    <div class="confirm-footer">
+      <button class="btn btn-outline" onclick="closeConfirmModal()">← แก้ไข</button>
+      <button class="btn btn-amber btn-lg" onclick="submitBooking()">✓ ยืนยันการจอง</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="auth-modal">
+  <div class="modal-box" style="position:relative">
+    <button class="modal-close" onclick="closeAuthModal()">✕</button>
+    <div class="modal-title">MeetSpace</div>
+    <div class="modal-sub">เข้าสู่ระบบเพื่อจองห้องประชุม</div>
+    <div class="modal-tabs">
+      <div class="modal-tab active" id="tab-login" onclick="switchAuthTab('login')">เข้าสู่ระบบ</div>
+      <div class="modal-tab" id="tab-register" onclick="switchAuthTab('register')">สมัครสมาชิก</div>
+    </div>
+    <div id="auth-err" class="modal-err"></div>
+    <div id="login-form">
+      <div class="modal-field"><label>อีเมล</label><input type="email" id="login-email" placeholder="your@email.com"></div>
+      <div class="modal-field"><label>รหัสผ่าน</label><input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn btn-amber btn-lg" style="margin-top:8px" onclick="doLogin()">เข้าสู่ระบบ</button>
+    </div>
+    <div id="register-form" style="display:none">
+      <div class="modal-field"><label>ชื่อ-นามสกุล</label><input type="text" id="reg-name" placeholder="ชื่อของคุณ"></div>
+      <div class="modal-field"><label>อีเมล</label><input type="email" id="reg-email" placeholder="your@email.com"></div>
+      <div class="modal-field"><label>รหัสผ่าน</label><input type="password" id="reg-pass" placeholder="อย่างน้อย 6 ตัวอักษร" onkeydown="if(event.key==='Enter')doRegister()"></div>
+      <button class="btn btn-amber btn-lg" style="margin-top:8px" onclick="doRegister()">สมัครสมาชิก</button>
+    </div>
+    <div style="text-align:center;margin-top:16px;font-size:12px;color:var(--text3)">ผู้ใช้ทั่วไปสามารถดูห้องว่างได้ โดยไม่ต้องเข้าสู่ระบบ</div>
+  </div>
+</div>
+
+<script type="module">
+
+// 1. นำเข้า Firebase SDK ผ่านช่องทางออนไลน์
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+// 2. ข้อมูลคอนฟิกโปรเจกต์ MeetSpace ของคุณ
+const firebaseConfig = {
+  apiKey: "AIzaSyCGM5L_s5qICJhbZcm3MTno9_UquYYfWIo",
+  authDomain: "meetspace-9e299.firebaseapp.com",
+  projectId: "meetspace-9e299",
+  storageBucket: "meetspace-9e299.firebasestorage.app",
+  messagingSenderId: "363483162491",
+  appId: "1:363483162491:web:28c08c6dd4ff29e488ffde",
+  measurementId: "G-7EHBMX6B5G"
+};
+
+// 3. เริ่มต้นระบบฐานข้อมูลออนไลน์
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+const bookingsRef = collection(db, "bookings");
+
+// ════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════
+const ROOMS=[
+  {id:1,name:'ห้องบัวหลวง',floor:'ชั้น 3',cap:12,color:'#185FA5',amenities:['โปรเจกเตอร์','ไวท์บอร์ด','Video Conference']},
+  {id:2,name:'ห้องสุวรรณภูมิ',floor:'ชั้น 4',cap:30,color:'#3B6D11',amenities:['LED Screen 86"','ไมโครโฟน','Video Conference']},
+  {id:3,name:'ห้องอโยธยา',floor:'ชั้น 3',cap:6,color:'#D85A30',amenities:['TV 55"','ไวท์บอร์ด']},
+  {id:4,name:'ห้องเชียงแสน',floor:'ชั้น 5',cap:20,color:'#533AB7',amenities:['โปรเจกเตอร์','Video Conference','Sound System']},
+  {id:5,name:'ห้องสุโขทัย',floor:'ชั้น 2',cap:8,color:'#0F6E56',amenities:['TV 65"','ไวท์บอร์ด','Webcam']},
+  {id:6,name:'ห้องลานนา',floor:'ชั้น 5',cap:50,color:'#993C1D',amenities:['ระบบ PA','LED Screen 120"','Video Conference']},
+];
+const CATERING=[
+  {id:'coffee',name:'ชา-กาแฟ',desc:'กาแฟ ชา น้ำผลไม้',icon:'☕'},
+  {id:'snack',name:'อาหารว่าง',desc:'ขนม คุกกี้ แซนด์วิช',icon:'🍪'},
+  {id:'break',name:'Break Set',desc:'อาหารว่างชุดครบ + เครื่องดื่ม',icon:'🥐'},
+  {id:'lunch',name:'อาหารกลางวัน',desc:'บุฟเฟต์หรือกล่องข้าว',icon:'🍱'},
+  {id:'water',name:'น้ำดื่ม',desc:'น้ำเปล่าและเครื่องดื่ม',icon:'💧'},
+  {id:'dinner',name:'อาหารเย็น',desc:'สำหรับประชุมดึก',icon:'🍽️'},
+];
+const TIME_SLOTS=['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
+const HALF_SLOTS=['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00'];
+
+// ════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════
+const pad=n=>n<10?'0'+n:''+n;
+const nowStr=()=>{const n=new Date();return pad(n.getHours())+':'+pad(n.getMinutes())};
+const todayStr=()=>new Date().toISOString().split('T')[0];
+const addDays=(d,n)=>{let r=new Date(d);r.setDate(r.getDate()+n);return r};
+const fmt=d=>d.toISOString().split('T')[0];
+const timeToMin=t=>{if(!t||typeof t!=='string'||!t.includes(':'))return 0;const[h,m]=t.split(':').map(Number);return h*60+m};
+const fmtDate=(s,opts={weekday:'short',day:'numeric',month:'short'})=>new Date(s+'T00:00:00').toLocaleDateString('th-TH',opts);
+const fmtElapsed=sec=>{const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return h>0?`${pad(h)}:${pad(m)}:${pad(s)}`:`${pad(m)}:${pad(s)}`};
+
+function getMeetingStatus(b){
+  if(!b||!b.start||!b.end)return'upcoming';
+  if(b.date!==todayStr())return b.date<todayStr()?'done':'upcoming';
+  const now=timeToMin(nowStr()),st=timeToMin(b.start),en=timeToMin(b.end);
+  if(now>=st&&now<en)return'live';
+  if(now>=st-15&&now<st)return'soon';
+  if(now>=en)return'done';
+  return'upcoming';
+}
+function elapsedSec(b){
+  if(!b||!b.start)return 0;
+  const now=new Date(),d=new Date(now.toDateString());
+  const[sh,sm]=b.start.split(':').map(Number);d.setHours(sh,sm,0,0);
+  return Math.max(0,Math.floor((now-d)/1000));
+}
+function durationSec(b){return(timeToMin(b.end)-timeToMin(b.start))*60}
+function countdownMin(b){return Math.max(0,timeToMin(b.start)-timeToMin(nowStr()))}
+function getBookedSlots(roomId,date){
+  return state.bookings.filter(b=>b.room===roomId&&b.date===date).flatMap(b=>{
+    const si=HALF_SLOTS.indexOf(b.start),ei=HALF_SLOTS.indexOf(b.end);
+    if(si<0)return[];
+    return HALF_SLOTS.slice(si,ei);
+  });
+}
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+let state={
+  view:'rooms',currentDate:new Date(),sessionId:null,
+  filter:'all',search:'',
+  bookings: [], 
+  currentUser: null,
+  form:{title:'',host:'',attendees:'',date:todayStr(),start:'',end:'',catering:[],roomId:'',notes:''}
+};
+
+function getLive() {
+  return state.bookings.filter(b => getMeetingStatus(b) === 'live');
+}
+
+function getSoon() {
+  return state.bookings.filter(b => getMeetingStatus(b) === 'soon');
+}
+
+// ════════════════════════════════════════════
+// UI HELPERS
+// ════════════════════════════════════════════
+let toastTimer;
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show';
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.className='toast',300)},2600);
+}
+function switchView(v){
+  state.view=v;
+  ['rooms','bookings','new','report'].forEach(x=>{
+    const el=document.getElementById('nav-'+x);
+    if(el)el.classList.toggle('active',x===v);
+  });
+  render();
+}
+
+function updateClock(){
+  const now=new Date();
+  const el=document.getElementById('clock-time');
+  const del=document.getElementById('clock-date');
+  if(el)el.textContent=pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
+  if(del)del.textContent=now.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long'});
+  const live=getLive().length;
+  const badge=document.getElementById('badge-live');
+  if(badge){badge.style.display=live>0?'block':'none';badge.textContent=live;}
+}
+
+function updateSideStats(){
+  const today=todayStr();
+  const usedRooms=new Set(state.bookings.filter(b=>b.date===today).map(b=>b.room)).size;
+  const an=document.getElementById('avail-num'),tn=document.getElementById('today-num');
+  if(an)an.textContent=ROOMS.length-usedRooms;
+  if(tn)tn.textContent=state.bookings.filter(b=>b.date===today).length;
+}
+
+function tickTimers(){
+  document.querySelectorAll('[data-timer]').forEach(el=>{
+    const id=parseInt(el.dataset.timer);
+    const b=state.bookings.find(x=>x.id===id);if(!b)return;
+    const s=getMeetingStatus(b);
+    if(s==='live')el.textContent=fmtElapsed(elapsedSec(b));
+    else if(s==='soon')el.textContent='อีก '+countdownMin(b)+' นาที';
+  });
+  document.querySelectorAll('[data-progress]').forEach(el=>{
+    const id=parseInt(el.dataset.progress);
+    const b=state.bookings.find(x=>x.id===id);if(!b)return;
+    el.style.width=Math.min(100,Math.round(elapsedSec(b)/durationSec(b)*100))+'%';
+  });
+  const se=document.getElementById('session-elapsed');
+  if(se&&state.sessionId){
+    const b=state.bookings.find(x=>x.id===state.sessionId);
+    if(b){
+      se.textContent=fmtElapsed(elapsedSec(b));
+      const sp=document.getElementById('session-progress');
+      if(sp)sp.style.width=Math.min(100,Math.round(elapsedSec(b)/durationSec(b)*100))+'%';
+    }
+  }
+}
+
+// ════════════════════════════════════════════
+// RENDER LIVE / SOON BANNERS
+// ════════════════════════════════════════════
+function renderLiveBanner(){
+  const live=getLive();if(!live.length)return'';
+  const rows=live.map(b=>{
+    const room=ROOMS.find(r=>r.id===b.room);
+    const pct=Math.min(100,Math.round(elapsedSec(b)/durationSec(b)*100));
+    return`<div class="live-row">
+      <div class="live-info">
+        <div class="live-title">${b.title}</div>
+        <div class="live-meta">${room?.name||''} · ${b.start}–${b.end} · ${b.host} · ${b.attendees} คน</div>
+        <div class="progress-mini"><div class="progress-mini-bar" data-progress="${b.id}" style="width:${pct}%"></div></div>
+      </div>
+      <div class="live-timer" data-timer="${b.id}">${fmtElapsed(elapsedSec(b))}</div>
+      <button class="btn btn-session" onclick="startSession(${b.id})">
+        <svg viewBox="0 0 16 16" fill="currentColor"><polygon points="4,2 14,8 4,14"/></svg>เข้าการประชุม
+      </button>
+    </div>`;
+  }).join('');
+  return`<div class="live-banner">
+    <div class="live-header"><div class="pulse-dot"></div><span class="live-label">กำลังประชุม — ${live.length} ห้อง</span></div>
+    ${rows}
+  </div>`;
+}
+
+function renderSoonBanner(){
+  const soon=getSoon();if(!soon.length)return'';
+  const rows=soon.map(b=>{
+    const room=ROOMS.find(r=>r.id===b.room);
+    return`<div class="soon-row">
+      <div style="flex:1">
+        <div style="font-size:13.5px;font-weight:600;color:var(--text)">${b.title}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px">${room?.name||''} · ${b.host}</div>
+      </div>
+      <span class="soon-countdown" data-timer="${b.id}">อีก ${countdownMin(b)} นาที</span>
+      <button class="btn btn-session" style="background:var(--amber-bg);color:var(--amber);border:1.5px solid var(--amber-light);padding:7px 14px;font-size:12px" onclick="startSession(${b.id})">
+        <svg viewBox="0 0 16 16" fill="currentColor" style="width:12px;height:12px"><polygon points="4,2 14,8 4,14"/></svg>เริ่มก่อนเวลา
+      </button>
+    </div>`;
+  }).join('');
+  return`<div class="soon-banner">
+    <div class="soon-header">
+      <svg viewBox="0 0 16 16" fill="none" stroke="var(--amber)" stroke-width="1.5" style="width:14px;height:14px"><circle cx="8" cy="8" r="6.5"/><polyline points="8,4.5 8,8 11,10"/></svg>
+      <span class="soon-label">กำลังจะเริ่ม — ${getSoon().length} รายการ</span>
+    </div>
+    ${rows}
+  </div>`;
+}
+
+// ════════════════════════════════════════════
+// ROOMS VIEW
+// ════════════════════════════════════════════
+function renderRooms(){
+  const today=fmt(state.currentDate);
+  const dispDate=state.currentDate.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const liveIds=new Set(getLive().map(b=>b.room));
+  const soonIds=new Set(getSoon().map(b=>b.room));
+  const cards=ROOMS.map(r=>{
+    const booked=getBookedSlots(r.id,today);
+    const liveSlots=getLive().filter(b=>b.room===r.id).flatMap(b=>{
+      const si=HALF_SLOTS.indexOf(b.start),ei=HALF_SLOTS.indexOf(b.end);
+      if(si<0)return[];return HALF_SLOTS.slice(si,ei);
+    });
+    const isLive=liveIds.has(r.id),isSoon=soonIds.has(r.id);
+    const isAvail=!state.bookings.some(b=>b.date===today&&b.room===r.id);
+    const slots=TIME_SLOTS.slice(0,8).map(t=>{
+      if(liveSlots.includes(t))return`<span class="ts lv">LIVE</span>`;
+      if(booked.includes(t))return`<span class="ts bk">${t}</span>`;
+      return`<span class="ts av">${t}</span>`;
+    }).join('');
+    let statusBadge='';
+    if(isLive)statusBadge=`<span class="room-status-badge status-live"><span style="width:7px;height:7px;border-radius:50%;background:var(--live);animation:pulse 1.4s infinite;display:inline-block"></span>ประชุมอยู่</span>`;
+    else if(isSoon)statusBadge=`<span class="room-status-badge" style="background:var(--amber-bg);color:var(--amber)">⏱ เร็วๆ นี้</span>`;
+    else if(isAvail)statusBadge=`<span class="room-status-badge status-avail">✓ ว่าง</span>`;
+    else statusBadge=`<span class="room-status-badge status-busy">ถูกจอง</span>`;
+    return`<div class="room-card ${isLive?'is-live':isSoon?'is-soon':''}" onclick="state.form.roomId=${r.id};switchView('new')">
+      <div class="room-stripe" style="background:${r.color}"></div>
+      <div class="room-header">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div><div class="room-name">${r.name}</div><div class="room-floor">${r.floor}</div></div>
+          ${statusBadge}
+        </div>
+      </div>
+      <div class="room-body">
+        <div class="room-caps">
+          <span class="room-badge">👥 ${r.cap} คน</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">${r.amenities.map(a=>`<span class="amenity-tag">${a}</span>`).join('')}</div>
+        <div style="font-size:10.5px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;font-weight:500">ช่วงเวลาวันนี้</div>
+        <div class="time-slots-row">${slots}</div>
+        <div style="margin-top:14px">${state.currentUser?
+          `<button class="btn btn-amber" style="width:100%;justify-content:center;font-size:12.5px;padding:8px" onclick="event.stopPropagation();state.form.roomId=${r.id};switchView('new')">+ จองห้องนี้</button>`:
+          `<button class="btn btn-outline" style="width:100%;justify-content:center;font-size:12px;padding:7px;color:var(--amber);border-color:var(--amber-light)" onclick="event.stopPropagation();openAuthModal()">🔒 เข้าสู่ระบบเพื่อจอง</button>`
+        }</div>
+      </div>
+    </div>`;
+  }).join('');
+  const today2=todayStr();
+  const live=getLive().length,avail=ROOMS.length-new Set(state.bookings.filter(b=>b.date===today2).map(b=>b.room)).size;
+  return`
+  <div class="top-bar">
+    <div><div class="page-title">ห้องประชุมทั้งหมด</div><div class="page-sub">${dispDate}</div></div>
+    <div class="top-actions">
+      <div class="date-nav">
+        <button class="date-nav-btn" onclick="changeDate(-1)">‹</button>
+        <span class="date-nav-text">${state.currentDate.toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'})}</span>
+        <button class="date-nav-btn" onclick="changeDate(1)">›</button>
+      </div>
+      <button class="btn btn-amber" onclick="${state.currentUser?`switchView('new')`:`openAuthModal()`}">+ จองห้อง${!state.currentUser?' (เข้าสู่ระบบ)':''}</button>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-card-num">${ROOMS.length}</div><div class="stat-card-label">ห้องทั้งหมด</div></div>
+    <div class="stat-card"><div class="stat-card-num" style="color:var(--green)">${avail}</div><div class="stat-card-label">ว่างวันนี้</div></div>
+    <div class="stat-card"><div class="stat-card-num" style="color:var(--live)">${live}</div><div class="stat-card-label">ประชุมอยู่</div></div>
+    <div class="stat-card"><div class="stat-card-num" style="color:var(--amber)">${state.bookings.filter(b=>b.date===today2).length}</div><div class="stat-card-label">จองวันนี้</div></div>
+  </div>
+  ${renderLiveBanner()}${renderSoonBanner()}
+  <div class="rooms-grid">${cards}</div>`;
+}
+
+// ════════════════════════════════════════════
+// BOOKINGS VIEW
+// ════════════════════════════════════════════
+function renderBookings(){
+  const today=todayStr();
+  let list=state.bookings.slice();
+  if(state.search){
+    const q=state.search.toLowerCase();
+    list=list.filter(b=>b.title.toLowerCase().includes(q)||b.host.toLowerCase().includes(q));
+  }
+  if(state.filter==='today')list=list.filter(b=>b.date===today);
+  else if(state.filter==='live')list=list.filter(b=>getMeetingStatus(b)==='live');
+  else if(state.filter==='upcoming')list=list.filter(b=>b.date>=today&&getMeetingStatus(b)!=='done');
+  list.sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.start||'').localeCompare(b.start||''));
+  const cards=list.length?list.map(b=>{
+    const room=ROOMS.find(r=>r.id===b.room);
+    const status=getMeetingStatus(b);
+    const isLive=status==='live',isSoon=status==='soon';
+    const tags=b.catering.map(c=>{const cat=CATERING.find(x=>x.id===c);return cat?`<span class="tag tag-food">${cat.icon} ${cat.name}</span>`:''}).join('');
+    const statusTag=isLive?`<span class="tag tag-live">● ประชุมอยู่</span>`:isSoon?`<span class="tag tag-soon">⏱ กำลังจะเริ่ม</span>`:'';
+    const timer=isLive?`<span class="booking-timer" style="color:var(--live)" data-timer="${b.id}">${fmtElapsed(elapsedSec(b))}</span>`:
+                isSoon?`<span class="booking-timer" style="color:var(--amber)" data-timer="${b.id}">อีก ${countdownMin(b)} นาที</span>`:'';
+    const todayBadge=b.date===today&&!isLive&&!isSoon?`<span class="tag tag-today">วันนี้</span>`:'';
+    return`<div class="booking-card ${isLive?'is-live':isSoon?'is-soon':''}">
+      <div class="booking-stripe" style="background:${b.color}"></div>
+      <div class="booking-info">
+        <div class="booking-title-row">
+          <span class="booking-title">${b.title}</span>
+          ${statusTag}${todayBadge}${timer}
+        </div>
+        <div class="booking-meta">📅 ${fmtDate(b.date)} &nbsp;⏰ ${b.start||'—'}–${b.end||'—'} &nbsp;👤 ${b.host} &nbsp;👥 ${b.attendees} คน</div>
+        <div class="booking-tags"><span class="tag tag-room">${room?.name||''}</span>${tags}</div>
+      </div>
+      <div class="booking-right">
+        ${(isLive||isSoon)?`<button class="btn btn-session ${isSoon?'':'btn-amber'}" style="${isSoon?'background:var(--amber-bg);color:var(--amber);border:1.5px solid var(--amber-light);':''}" onclick="startSession(${b.id})">
+          <svg viewBox="0 0 16 16" fill="${isSoon?'var(--amber)':'currentColor'}" style="width:12px;height:12px"><polygon points="4,2 14,8 4,14"/></svg>
+          ${isSoon?'เริ่มก่อนเวลา':'เข้าประชุม'}
+        </button>`:''  }
+        <div style="display:flex;gap:6px">
+          ${state.currentUser?`<button class="btn btn-outline" style="font-size:12px;padding:5px 10px" onclick="editBooking(${b.id})">แก้ไข</button>
+          <button class="btn btn-danger" onclick="deleteBooking(${b.id})">ลบ</button>`:`<span style="font-size:11px;color:var(--text3);align-self:center">🔒 สมาชิก</span>`}
+        </div>
+      </div>
+    </div>`;
+  }).join(''):`<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">ไม่พบการจอง</div><div class="empty-sub">ลองเปลี่ยนตัวกรองหรือ<a onclick="switchView('new')" style="color:var(--amber);cursor:pointer">จองห้องใหม่</a></div></div>`;
+  return`
+  <div class="top-bar">
+    <div><div class="page-title">การจองทั้งหมด</div><div class="page-sub">${state.bookings.length} รายการ</div></div>
+    <div class="top-actions">
+      <div class="search-wrap">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><line x1="11" y1="11" x2="14" y2="14"/></svg>
+        <input class="search-input" placeholder="ค้นหา..." value="${state.search}" oninput="window.updateFormField('search',this.value)">
+      </div>
+      <button class="btn btn-amber" onclick="${state.currentUser?`switchView('new')`:`openAuthModal()`}">+ จองใหม่</button>
+    </div>
+  </div>
+  <div class="filter-row">
+    <span class="filter-chip ${state.filter==='all'?'active':''}" onclick="state.filter='all';render()">ทั้งหมด</span>
+    <span class="filter-chip ${state.filter==='today'?'active':''}" onclick="state.filter='today';render()">วันนี้</span>
+    <span class="filter-chip ${state.filter==='live'?'active':''}" onclick="state.filter='live';render()">● กำลังประชุม</span>
+    <span class="filter-chip ${state.filter==='upcoming'?'active':''}" onclick="state.filter='upcoming';render()">ที่กำลังจะมา</span>
+  </div>
+  ${renderLiveBanner()}${renderSoonBanner()}
+  <div class="bookings-list">${cards}</div>`;
+}
+
+// ════════════════════════════════════════════
+// NEW BOOKING FORM
+// ════════════════════════════════════════════
+function renderNew(){
+  // ถ้าไม่ได้ login ให้แสดง gate
+  if(!state.currentUser){
+    return`
+    <div class="top-bar">
+      <div><div class="page-title">จองห้องประชุม</div><div class="page-sub">สำหรับสมาชิกเท่านั้น</div></div>
+      <button class="btn btn-outline" onclick="switchView('rooms')">← กลับ</button>
+    </div>
+    <div class="member-gate">
+      <div class="member-gate-icon">🔒</div>
+      <div class="member-gate-text">
+        <div class="member-gate-title">กรุณาเข้าสู่ระบบก่อนทำการจอง</div>
+        <div class="member-gate-sub">เฉพาะสมาชิกเท่านั้นที่สามารถจองห้องประชุมได้ ผู้ใช้ทั่วไปสามารถดูข้อมูลห้องได้</div>
+      </div>
+      <button class="btn btn-amber" onclick="openAuthModal()">เข้าสู่ระบบ / สมัครสมาชิก</button>
+    </div>`;
+  }
+  const f=state.form;
+  // Auto-fill host จากชื่อสมาชิก
+  if(state.currentUser && !f.host){
+    f.host = state.currentUser.displayName || state.currentUser.email || '';
+  }
+  const roomOpts=ROOMS.map(r=>`<option value="${r.id}" ${f.roomId==r.id?'selected':''}>${r.name} (${r.floor}, ${r.cap} คน)</option>`).join('');
+  const bookedSlots=f.roomId?getBookedSlots(parseInt(f.roomId),f.date):[];
+  const timeHTML=HALF_SLOTS.map(t=>{
+    const isBk=bookedSlots.includes(t);
+    let cls='time-btn';
+    if(isBk)cls+=' disabled';
+    else if(t===f.start||t===f.end)cls+=' selected';
+    else if(f.start&&f.end&&timeToMin(t)>timeToMin(f.start)&&timeToMin(t)<timeToMin(f.end))cls+=' in-range';
+    return`<div class="${cls}" ${isBk?'':'onclick="selectTime(\''+t+'\')"'}>${t}</div>`;
+  }).join('');
+  let timeHint='';
+  if(f.start&&f.end)timeHint=`${f.start} – ${f.end} &nbsp;(${timeToMin(f.end)-timeToMin(f.start)} นาที)`;
+  else if(f.start)timeHint=`เริ่ม ${f.start} — คลิกเวลาสิ้นสุด`;
+  else timeHint='คลิกเวลาเริ่มต้น จากนั้นคลิกเวลาสิ้นสุด';
+  const cHTML=CATERING.map(c=>`
+    <div class="catering-item ${f.catering.includes(c.id)?'checked':''}" onclick="toggleCatering('${c.id}')">
+      <div class="catering-check"><div class="check-mark"></div></div>
+      <div style="flex:1">
+        <div class="catering-name">${c.icon} ${c.name}</div>
+        <div class="catering-desc">${c.desc}</div>
+      </div>
+    </div>`).join('');
+  return`
+  <div class="top-bar">
+    <div>
+      <div class="page-title">จองห้องประชุม</div>
+      <div class="page-sub">กรอกรายละเอียดการจอง</div>
+    </div>
+    <button class="btn btn-outline" onclick="switchView('rooms')">← กลับ</button>
+  </div>
+  <div class="form-wrap">
+  <div class="form-panel">
+    <div class="form-section">
+      <div class="form-section-title">ข้อมูลการประชุม</div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label>ชื่อการประชุม / กิจกรรม</label>
+        <input type="text" value="${f.title}" placeholder="เช่น ประชุมทีม Marketing" oninput="window.updateFormField('title',this.value)">
+      </div>
+      <div class="form-row" style="margin-bottom:0">
+        <div class="form-group"><label>ผู้จอง / เจ้าของการประชุม</label><input type="text" value="${f.host}" placeholder="ชื่อ-นามสกุล" oninput="window.updateFormField('host',this.value)"></div>
+        <div class="form-group">
+          <label>จำนวนผู้เข้าร่วม</label>
+          <input type="number" id="attendees-input" value="${f.attendees}" placeholder="จำนวนคน" min="1" ${f.roomId?`max="${ROOMS.find(r=>r.id==f.roomId)?.cap||999}"`:''} oninput="window.updateFormField('attendees',this.value);window.checkAttendeeCap(this.value)">
+          ${f.roomId?`<div class="cap-hint">ความจุสูงสุด: ${ROOMS.find(r=>r.id==f.roomId)?.cap||'—'} คน</div>`:''}
+          <div class="attendees-warn ${f.roomId&&f.attendees&&parseInt(f.attendees)>ROOMS.find(r=>r.id==f.roomId)?.cap?'show':''}" id="attendees-warn">
+            ⚠ เกินความจุห้อง! ห้องนี้รองรับได้สูงสุด <strong id="cap-num">${f.roomId?ROOMS.find(r=>r.id==f.roomId)?.cap:''}</strong> คน
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">ห้องและวันเวลา</div>
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="form-group"><label>ห้องประชุม</label><select onchange="window.updateRoomSelect(this.value)">${f.roomId?'':'<option value="">— เลือกห้อง —</option>'}${roomOpts}</select></div>
+        <div class="form-group"><label>วันที่</label><input type="date" value="${f.date}" min="${todayStr()}" onchange="window.updateDateSelect(this.value)"></div>
+      </div>
+      <div class="form-group">
+        <label>เลือกช่วงเวลา</label>
+        <div class="time-hint">${timeHint}</div>
+        <div class="time-grid">${timeHTML}</div>
+        ${f.start||f.end?`<button class="btn btn-ghost" onclick="window.clearTimeSelect()">✕ ล้างเวลา</button>`:''}
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">อาหาร / เครื่องดื่ม (ไม่บังคับ)</div>
+      <div class="catering-grid">${cHTML}</div>
+    </div>
+    <div class="form-section" style="border:none">
+      <div class="form-section-title">หมายเหตุเพิ่มเติม</div>
+      <div class="form-group">
+        <textarea rows="3" placeholder="รายละเอียดเพิ่มเติม ความต้องการพิเศษ ฯลฯ" style="resize:vertical;min-height:80px" oninput="window.updateFormField('notes',this.value)">${f.notes||''}</textarea>
+      </div>
+      <button class="btn btn-primary btn-lg" onclick="openConfirmModal()">ดูสรุปและยืนยันการจอง →</button>
+    </div>
+  </div></div>`;
+}
+
+// ════════════════════════════════════════════
+// SESSION VIEW
+// ════════════════════════════════════════════
+function renderSession(){
+  const b=state.bookings.find(x=>x.id===state.sessionId);
+  if(!b)return`<div style="padding:60px;text-align:center;color:var(--text2)">ไม่พบข้อมูลการประชุม</div>`;
+  const room=ROOMS.find(r=>r.id===b.room);
+  const dur=durationSec(b),elapsed=elapsedSec(b);
+  const pct=Math.min(100,Math.round(elapsed/dur*100));
+  const cats=b.catering.map(c=>{const cat=CATERING.find(x=>x.id===c);return cat?`<span class="catering-pill">${cat.icon} ${cat.name}</span>`:''}).join('');
+  return`
+  <div class="session-wrap">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
+      <button class="btn btn-outline" onclick="endSession()">← ออกจากการประชุม</button>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="pulse-dot"></div>
+        <span style="font-size:11.5px;font-weight:700;color:var(--live);text-transform:uppercase;letter-spacing:1.2px">ประชุมอยู่</span>
+      </div>
+    </div>
+    <div class="session-card">
+      <div class="session-room-label">${room?.name||''} · ${room?.floor||''}</div>
+      <div class="session-title">${b.title}</div>
+      <div class="session-host">👤 ${b.host} &nbsp;·&nbsp; 👥 ${b.attendees} คน</div>
+      <div class="session-clock" id="session-elapsed">${fmtElapsed(elapsed)}</div>
+      <div class="session-clock-label">เวลาที่ใช้ไป</div>
+      <div class="session-progress-wrap">
+        <div class="session-progress-bar" id="session-progress" style="width:${pct}%"></div>
+      </div>
+      <div class="session-meta">
+        <div class="session-meta-item"><div class="session-meta-val">${b.start}</div><div class="session-meta-key">เริ่มต้น</div></div>
+        <div class="session-meta-item"><div class="session-meta-val">${b.end}</div><div class="session-meta-key">สิ้นสุด</div></div>
+        <div class="session-meta-item"><div class="session-meta-val">${timeToMin(b.end)-timeToMin(b.start)} นาที</div><div class="session-meta-key">ระยะเวลา</div></div>
+        <div class="session-meta-item"><div class="session-meta-val">${Math.max(0,timeToMin(b.end)-timeToMin(nowStr()))} นาที</div><div class="session-meta-key">คงเหลือ</div></div>
+      </div>
+      ${b.catering.length?`<div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;font-weight:500;margin-bottom:10px">อาหาร / เครื่องดื่ม</div><div class="catering-pills">${cats}</div>`:''}
+      <div class="session-actions">
+        <button class="btn btn-outline" onclick="endSession()">⏹ จบการประชุม</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════
+// REPORT VIEW
+// ════════════════════════════════════════════
+function renderReport(){
+  const today=todayStr();
+  const totalBookings=state.bookings.length;
+  const todayBookings=state.bookings.filter(b=>b.date===today).length;
+  const roomUsage=ROOMS.map(r=>{
+    const count=state.bookings.filter(b=>r.id===b.room).length;
+    const pct=totalBookings?Math.round(count/totalBookings*100):0;
+    return{...r,count,pct};
+  }).sort((a,b)=>b.count-a.count);
+  const cateringCount={};
+  state.bookings.forEach(b=>b.catering.forEach(c=>{cateringCount[c]=(cateringCount[c]||0)+1}));
+  const cateringRows=CATERING.filter(c=>cateringCount[c.id]).sort((a,b)=>(cateringCount[b.id]||0)-(cateringCount[a.id]||0)).map(c=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:16px">${c.icon}</span>
+      <span style="flex:1;font-size:13px;font-weight:500">${c.name}</span>
+      <span style="font-size:13px;font-weight:600;color:var(--amber)">${cateringCount[c.id]||0} ครั้ง</span>
+    </div>`).join('');
+  const roomRows=roomUsage.map(r=>`
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:13px;font-weight:500">${r.name}</span>
+        <span style="font-size:12px;color:var(--text2)">${r.count} ครั้ง (${r.pct}%)</span>
+      </div>
+      <div style="background:var(--border);border-radius:20px;height:8px;overflow:hidden">
+        <div style="height:100%;background:${r.color};border-radius:20px;width:${r.pct}%;transition:width .5s ease"></div>
+      </div>
+    </div>`).join('');
+  return`
+  <div class="top-bar">
+    <div><div class="page-title">รายงานการใช้งาน</div><div class="page-sub">ภาพรวมระบบจัดการห้องประชุม</div></div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-card-num">${totalBookings}</div><div class="stat-card-label">จองทั้งหมด</div></div>
+    <div class="stat-card"><div class="stat-card-num" style="color:var(--amber)">${todayBookings}</div><div class="stat-card-label">วันนี้</div></div>
+    <div class="stat-card"><div class="stat-card-num" style="color:var(--green)">${state.bookings.filter(b=>getMeetingStatus(b)==='done').length}</div><div class="stat-card-label">เสร็จแล้ว</div></div>
+    <div class="stat-card"><div class="stat-card-num" style="color:var(--blue)">${state.bookings.filter(b=>b.catering.length>0).length}</div><div class="stat-card-label">มีอาหาร</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;box-shadow:var(--shadow)">
+      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:20px;color:var(--text)">อัตราการใช้ห้อง</div>
+      ${roomRows}
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;box-shadow:var(--shadow)">
+      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;color:var(--text)">การสั่งอาหาร / เครื่องดื่ม</div>
+      ${cateringRows||'<div style="color:var(--text3);font-size:13px;padding:20px 0;text-align:center">ยังไม่มีข้อมูล</div>'}
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════
+// ACTIONS
+// ════════════════════════════════════════════
+async function editBooking(id){
+  const b=state.bookings.find(x=>x.id===id);if(!b)return;
+  state.form={...b,roomId:b.room,catering:[...b.catering]};
+  if(b.firestoreId){
+    await deleteDoc(doc(db, "bookings", b.firestoreId));
+  }
+  switchView('new');
+}
+
+async function deleteBooking(id){
+  if(!confirm('ยืนยันการลบการจองนี้?'))return;
+  const b=state.bookings.find(x=>x.id===id);
+  if(b && b.firestoreId){
+    await deleteDoc(doc(db, "bookings", b.firestoreId));
+    showToast('🗑 ลบการจองเรียบร้อยแล้ว');
+  }
+}
+
+// ════════════════════════════════════════════
+// CONFIRM MODAL
+// ════════════════════════════════════════════
+function checkAttendeeCap(val){
+  const f=state.form;
+  const warn=document.getElementById('attendees-warn');
+  if(!warn)return;
+  const room=ROOMS.find(r=>r.id==f.roomId);
+  if(room&&val&&parseInt(val)>room.cap){
+    document.getElementById('cap-num').textContent=room.cap;
+    warn.classList.add('show');
+  }else{
+    warn.classList.remove('show');
+  }
+}
+
+function openConfirmModal(){
+  if(!state.currentUser){openAuthModal();return showToast('⚠ กรุณาเข้าสู่ระบบก่อนทำการจอง');}
+  // sync attendees จาก DOM เพื่อให้ได้ค่าล่าสุดเสมอ
+  const inputEl=document.getElementById('attendees-input');
+  if(inputEl) state.form.attendees=inputEl.value;
+  const f=state.form;
+  if(!f.title.trim())return showToast('⚠ กรุณากรอกชื่อการประชุม');
+  if(!f.host.trim())return showToast('⚠ กรุณากรอกชื่อผู้จอง');
+  if(!f.roomId)return showToast('⚠ กรุณาเลือกห้องประชุม');
+  if(!f.date)return showToast('⚠ กรุณาเลือกวันที่');
+  if(!f.start||!f.end)return showToast('⚠ กรุณาเลือกช่วงเวลา');
+  if(!f.attendees||parseInt(f.attendees)<1)return showToast('⚠ กรุณากรอกจำนวนผู้เข้าร่วม');
+  const room=ROOMS.find(r=>r.id==f.roomId);
+  if(room&&parseInt(f.attendees)>room.cap)return showToast(`⚠ ห้องรองรับได้สูงสุด ${room.cap} คน`);
+  const conflict=state.bookings.find(b=>b.room===parseInt(f.roomId)&&b.date===f.date&&timeToMin(b.start)<timeToMin(f.end)&&timeToMin(b.end)>timeToMin(f.start));
+  if(conflict)return showToast('⚠ ช่วงเวลานี้ถูกจองแล้ว กรุณาเลือกเวลาอื่น');
+
+  // Fill modal content
+  document.getElementById('cm-title').textContent=f.title;
+  document.getElementById('cm-room-badge').textContent='🏢 '+(room?`${room.name} · ${room.floor}`:'—');
+  const dateLabel=new Date(f.date+'T00:00').toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('cm-datetime').textContent=`${dateLabel}  ${f.start} – ${f.end} น. (${timeToMin(f.end)-timeToMin(f.start)} นาที)`;
+  document.getElementById('cm-host').textContent=f.host;
+  document.getElementById('cm-attendees').textContent=`${f.attendees} คน${room?` (ความจุสูงสุด ${room.cap} คน)`:''}`;
+
+  // Catering
+  const catEl=document.getElementById('cm-catering');
+  if(f.catering.length){
+    catEl.innerHTML=f.catering.map(id=>{const c=CATERING.find(x=>x.id===id);return c?`<span class="confirm-catering-pill">${c.icon} ${c.name}</span>`:''}).join('');
+  }else{
+    catEl.innerHTML='<span style="font-size:12.5px;color:var(--text3)">ไม่ได้สั่งอาหาร/เครื่องดื่ม</span>';
+  }
+
+  // Notes
+  const notesRow=document.getElementById('cm-notes-row');
+  if(f.notes&&f.notes.trim()){
+    document.getElementById('cm-notes').textContent=f.notes;
+    notesRow.style.display='flex';
+  }else{
+    notesRow.style.display='none';
+  }
+
+  const overlay=document.getElementById('confirm-modal');
+  overlay.classList.add('show');
+}
+
+function closeConfirmModal(){
+  document.getElementById('confirm-modal').classList.remove('show');
+}
+
+
+async function submitBooking(){
+  if(!state.currentUser){closeConfirmModal();openAuthModal();return;}
+  const f=state.form;
+  const room=ROOMS.find(r=>r.id==f.roomId);
+  const newBooking={
+    id:Date.now(),
+    title:f.title.trim(),
+    room:parseInt(f.roomId),
+    date:f.date,
+    start:f.start,
+    end:f.end,
+    host:f.host.trim(),
+    attendees:parseInt(f.attendees),
+    catering:[...f.catering],
+    notes:f.notes||'',
+    color:room?room.color:'#185FA5'
+  };
+  try{
+    await addDoc(bookingsRef,newBooking);
+    closeConfirmModal();
+    state.form={title:'',host:'',attendees:'',date:todayStr(),start:'',end:'',catering:[],roomId:'',notes:''};
+    showToast('✓ จองห้องประชุมสำเร็จ!');
+    switchView('bookings');
+  }catch(error){
+    showToast('❌ การเชื่อมต่อล้มเหลว กรุณาเช็กสิทธิ์ Firestore');
+    console.error(error);
+  }
+}
+
+
+function selectTime(t) {
+  const f = state.form;
+  if (!f.start || (f.start && f.end)) {
+    f.start = t;
+    f.end = '';
+  } else {
+    if (timeToMin(t) <= timeToMin(f.start)) {
+      f.start = t;
+      f.end = '';
+    } else {
+      f.end = t;
+    }
+  }
+  render();
+}
+
+function toggleCatering(id) {
+  const idx = state.form.catering.indexOf(id);
+  if (idx > -1) {
+    state.form.catering.splice(idx, 1);
+  } else {
+    state.form.catering.push(id);
+  }
+  render();
+}
+
+function changeDate(n) {
+  state.currentDate = addDays(state.currentDate, n);
+  render();
+}
+
+function startSession(id) {
+  state.sessionId = id;
+  switchView('session');
+}
+
+function endSession() {
+  state.sessionId = null;
+  switchView('rooms');
+}
+
+// ════════════════════════════════════════════
+// MODULE FORM HELPER FUNCTIONS
+// ════════════════════════════════════════════
+function updateFormField(field, value) {
+  if(field === 'search'){
+    state.search = value;
+    render();
+  } else {
+    state.form[field] = value;
+  }
+}
+
+function updateRoomSelect(value) {
+  state.form.roomId = value;
+  state.form.start = '';
+  state.form.end = '';
+  render();
+}
+
+function updateDateSelect(value) {
+  state.form.date = value;
+  state.form.start = '';
+  state.form.end = '';
+  render();
+}
+
+function clearTimeSelect() {
+  state.form.start = '';
+  state.form.end = '';
+  render();
+}
+
+// เฝ้าดูการจองออนไลน์ ถ้าใครกดจองหรือลบ หน้าจอของทุกคนจะเปลี่ยนตามกันทันทีโดยไม่ต้องรีเฟรช
+onSnapshot(query(bookingsRef), (snapshot) => {
+  state.bookings = [];
+  snapshot.forEach((doc) => {
+    state.bookings.push({
+      firestoreId: doc.id,
+      ...doc.data()
+    });
+  });
+  render(); 
+  updateSideStats();
+});
+
+// ════════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════════
+function openAuthModal(tab='login'){
+  const overlay=document.getElementById('auth-modal');
+  overlay.classList.add('show');
+  switchAuthTab(tab);
+  document.getElementById('auth-err').classList.remove('show');
+}
+function closeAuthModal(){
+  const overlay=document.getElementById('auth-modal');
+  overlay.classList.remove('show');
+}
+function switchAuthTab(tab){
+  document.getElementById('tab-login').classList.toggle('active',tab==='login');
+  document.getElementById('tab-register').classList.toggle('active',tab==='register');
+  document.getElementById('login-form').style.display=tab==='login'?'block':'none';
+  document.getElementById('register-form').style.display=tab==='register'?'block':'none';
+  document.getElementById('auth-err').classList.remove('show');
+}
+function showAuthErr(msg){
+  const el=document.getElementById('auth-err');
+  el.textContent=msg;el.classList.add('show');
+}
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  if(!email||!pass)return showAuthErr('กรุณากรอกอีเมลและรหัสผ่าน');
+  try{
+    await signInWithEmailAndPassword(auth,email,pass);
+    closeAuthModal();
+    showToast('✓ เข้าสู่ระบบสำเร็จ!');
+  }catch(e){
+    const msgs={'auth/user-not-found':'ไม่พบบัญชีนี้','auth/wrong-password':'รหัสผ่านไม่ถูกต้อง','auth/invalid-email':'อีเมลไม่ถูกต้อง','auth/invalid-credential':'อีเมลหรือรหัสผ่านไม่ถูกต้อง'};
+    showAuthErr(msgs[e.code]||'เกิดข้อผิดพลาด: '+e.message);
+  }
+}
+async function doRegister(){
+  const name=document.getElementById('reg-name').value.trim();
+  const email=document.getElementById('reg-email').value.trim();
+  const pass=document.getElementById('reg-pass').value;
+  if(!name)return showAuthErr('กรุณากรอกชื่อ');
+  if(!email)return showAuthErr('กรุณากรอกอีเมล');
+  if(pass.length<6)return showAuthErr('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
+  try{
+    const cred=await createUserWithEmailAndPassword(auth,email,pass);
+    await updateProfile(cred.user,{displayName:name});
+    state.currentUser={...cred.user,displayName:name};
+    closeAuthModal();
+    showToast('✓ สมัครสมาชิกและเข้าสู่ระบบสำเร็จ!');
+    renderSidebarUser();
+  }catch(e){
+    const msgs={'auth/email-already-in-use':'อีเมลนี้ถูกใช้แล้ว','auth/invalid-email':'อีเมลไม่ถูกต้อง','auth/weak-password':'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'};
+    showAuthErr(msgs[e.code]||'เกิดข้อผิดพลาด: '+e.message);
+  }
+}
+async function doSignOut(){
+  await signOut(auth);
+  state.currentUser=null;
+  showToast('ออกจากระบบแล้ว');
+  renderSidebarUser();
+  render();
+}
+function renderSidebarUser(){
+  const el=document.getElementById('sidebar-user-area');
+  if(!el)return;
+  if(state.currentUser){
+    const initial=(state.currentUser.displayName||state.currentUser.email||'?')[0].toUpperCase();
+    const name=state.currentUser.displayName||state.currentUser.email;
+    el.innerHTML=`<div class="user-bar">
+      <div class="user-avatar">${initial}</div>
+      <div style="flex:1;min-width:0"><div class="user-name">${name}</div><div class="user-role">สมาชิก</div></div>
+      <button class="btn-signout" onclick="doSignOut()">ออก</button>
+    </div>`;
+  }else{
+    el.innerHTML=`<div class="btn-login-side" onclick="openAuthModal()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px"><circle cx="8" cy="5.5" r="2.5"/><path d="M3 13c0-2.76 2.24-5 5-5s5 2.24 5 5"/></svg>
+      เข้าสู่ระบบ / สมัครสมาชิก
+    </div>`;
+  }
+}
+
+onAuthStateChanged(auth,(user)=>{
+  state.currentUser=user;
+  renderSidebarUser();
+  render();
+});
+
+// ════════════════════════════════════════════
+// RENDER LOOP
+// ════════════════════════════════════════════
+function render(){
+  const main=document.getElementById('main-content');
+  if(state.view==='session'){main.innerHTML=renderSession();return;}
+  if(state.view==='rooms')main.innerHTML=renderRooms();
+  else if(state.view==='bookings')main.innerHTML=renderBookings();
+  else if(state.view==='new')main.innerHTML=renderNew();
+  else if(state.view==='report')main.innerHTML=renderReport();
+  updateSideStats();
+}
+
+render();
+updateClock();
+setInterval(updateClock,1000);
+setInterval(tickTimers,1000);
+setInterval(()=>{if(state.view!=='session')render();updateSideStats();},30000);
+
+// ผูกฟังก์ชันให้เชื่อมเข้ากับหน้าเว็บหลัก
+window.switchView = switchView;
+window.editBooking = editBooking;
+window.deleteBooking = deleteBooking;
+window.submitBooking = submitBooking;
+window.selectTime = selectTime;
+window.toggleCatering = toggleCatering;
+window.changeDate = changeDate;
+window.startSession = startSession;
+window.endSession = endSession;
+window.updateFormField = updateFormField;
+window.updateRoomSelect = updateRoomSelect;
+window.updateDateSelect = updateDateSelect;
+window.clearTimeSelect = clearTimeSelect;
+window.openAuthModal = openAuthModal;
+window.closeAuthModal = closeAuthModal;
+window.switchAuthTab = switchAuthTab;
+window.doLogin = doLogin;
+window.doRegister = doRegister;
+window.doSignOut = doSignOut;
+window.openConfirmModal = openConfirmModal;
+window.closeConfirmModal = closeConfirmModal;
+window.checkAttendeeCap = checkAttendeeCap;
+window.state = state;
+
+</script>
+</body>
+</html>
