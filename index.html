@@ -1170,7 +1170,10 @@ function clearTimeSelect() {
 }
 
 // เฝ้าดูการจองออนไลน์ ถ้าใครกดจองหรือลบ หน้าจอของทุกคนจะเปลี่ยนตามกันทันทีโดยไม่ต้องรีเฟรช
-onSnapshot(query(bookingsRef), (snapshot) => {
+// ป้องกัน MaxListenersExceededWarning ด้วยการ unsubscribe ก่อน subscribe ใหม่ทุกครั้ง
+let _unsubSnapshot = null;
+if (_unsubSnapshot) _unsubSnapshot();
+_unsubSnapshot = onSnapshot(query(bookingsRef), (snapshot) => {
   state.bookings = [];
   snapshot.forEach((doc) => {
     state.bookings.push({
@@ -1264,7 +1267,9 @@ function renderSidebarUser(){
   }
 }
 
-onAuthStateChanged(auth,(user)=>{
+let _unsubAuth = null;
+if (_unsubAuth) _unsubAuth();
+_unsubAuth = onAuthStateChanged(auth,(user)=>{
   state.currentUser=user;
   renderSidebarUser();
   render();
