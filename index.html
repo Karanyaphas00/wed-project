@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏢</text></svg>">
-<title>MeetSpace — ระบบจัดการห้องประชุม</title>
+<title>MeetSpace — ระบบจัดการห้องประชุม สภ.งาว</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Syne:wght@600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -304,6 +304,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .member-gate-text{flex:1}
 .member-gate-title{font-weight:600;font-size:14px;color:var(--amber-dark);margin-bottom:3px}
 .member-gate-sub{font-size:12.5px;color:var(--amber)}
+
+/* ─── ADMIN PANEL ─── */
+.admin-badge{display:inline-flex;align-items:center;gap:5px;background:#EDE9FB;color:#533AB7;border:1px solid rgba(83,58,183,.2);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600}
+.user-avatar.admin-av{background:#533AB7}
+.pending-card{background:var(--surface);border:2px solid #FFDF7E;border-radius:var(--radius-lg);padding:18px 20px;margin-bottom:10px;box-shadow:var(--shadow)}
+.room-manage-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;display:flex;align-items:center;gap:14px;margin-bottom:8px;box-shadow:var(--shadow)}
+.btn-success{background:#EAF3DE;color:#3B6D11;border:1.5px solid transparent;padding:6px 12px;font-size:12px;border-radius:var(--radius)}
+.btn-success:hover{border-color:#3B6D11}
+.tag-pending{background:#FFF3CD;color:#856404;border:1px solid #FFDF7E}
+.tag-approved{background:#EAF3DE;color:#3B6D11}
+.tag-rejected{background:#FCEBEB;color:#A32D2D}
+
+/* ─── REJECT / ROOM MODALS ─── */
+.reject-modal-box{background:var(--surface);border-radius:var(--radius-xl);padding:28px;width:100%;max-width:420px;box-shadow:var(--shadow-lg);transform:translateY(16px);transition:transform .25s;border:1px solid var(--border)}
+.modal-overlay.show .reject-modal-box{transform:translateY(0)}
+.room-modal-box{background:var(--surface);border-radius:var(--radius-xl);padding:0;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(16px);transition:transform .25s;border:1px solid var(--border)}
+.modal-overlay.show .room-modal-box{transform:translateY(0)}
 </style>
 </head>
 <body>
@@ -317,7 +334,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       </div>
       <div class="logo-text">
         <div class="logo-title">MeetSpace</div>
-        <div class="logo-sub">ระบบจองห้องประชุม</div>
+        <div class="logo-sub">สภ.งาว</div>
       </div>
     </div>
   </div>
@@ -344,6 +361,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="nav-item" onclick="switchView('report')" id="nav-report">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="1" width="12" height="14" rx="1.5"/><line x1="5" y1="5" x2="11" y2="5"/><line x1="5" y1="8" x2="11" y2="8"/><line x1="5" y1="11" x2="9" y2="11"/></svg>
       รายงาน
+    </div>
+    <div class="nav-item" id="nav-admin" style="display:none" onclick="switchView('admin')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.31 2.69-6 6-6s6 2.69 6 6"/></svg>
+      จัดการระบบ (Admin)
+      <span class="nav-badge" id="badge-pending" style="display:none;background:#C97B1A">0</span>
     </div>
   </div>
   <div id="sidebar-user-area"></div>
@@ -401,7 +423,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
     <div class="confirm-footer">
       <button class="btn btn-outline" onclick="closeConfirmModal()">← แก้ไข</button>
-      <button class="btn btn-amber btn-lg" onclick="submitBooking()">✓ ยืนยันการจอง</button>
+      <button class="btn btn-amber btn-lg" onclick="submitBooking()">✓ ส่งคำขอจอง</button>
     </div>
   </div>
 </div>
@@ -409,7 +431,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <div class="modal-box" style="position:relative">
     <button class="modal-close" onclick="closeAuthModal()">✕</button>
     <div class="modal-title">MeetSpace</div>
-    <div class="modal-sub">เข้าสู่ระบบเพื่อจองห้องประชุม</div>
+    <div class="modal-sub">เข้าสู่ระบบเพื่อจองห้องประชุม สภ.งาว</div>
     <div class="modal-tabs">
       <div class="modal-tab active" id="tab-login" onclick="switchAuthTab('login')">เข้าสู่ระบบ</div>
       <div class="modal-tab" id="tab-register" onclick="switchAuthTab('register')">สมัครสมาชิก</div>
@@ -422,6 +444,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
     <div id="register-form" style="display:none">
       <div class="modal-field"><label>ชื่อ-นามสกุล</label><input type="text" id="reg-name" placeholder="ชื่อของคุณ"></div>
+      <div class="modal-field"><label>ยศตำรวจ</label>
+        <select id="reg-rank">
+          <option value="">— เลือกยศ —</option>
+          <option>พล.ต.ต.</option><option>พ.ต.อ.</option><option>พ.ต.ท.</option>
+          <option>พ.ต.ต.</option><option>ร.ต.อ.</option><option>ร.ต.ท.</option>
+          <option>ร.ต.ต.</option><option>ด.ต.</option><option>จ.ส.ต.</option>
+          <option>ส.ต.อ.</option><option>ส.ต.ท.</option><option>ส.ต.ต.</option>
+          <option>พลตำรวจ</option><option>เจ้าหน้าที่</option>
+        </select>
+      </div>
       <div class="modal-field"><label>อีเมล</label><input type="email" id="reg-email" placeholder="your@email.com"></div>
       <div class="modal-field"><label>รหัสผ่าน</label><input type="password" id="reg-pass" placeholder="อย่างน้อย 6 ตัวอักษร" onkeydown="if(event.key==='Enter')doRegister()"></div>
       <button class="btn btn-amber btn-lg" style="margin-top:8px" onclick="doRegister()">สมัครสมาชิก</button>
@@ -430,11 +462,57 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </div>
 
+<!-- REJECT REASON MODAL -->
+<div class="modal-overlay" id="reject-modal">
+  <div class="reject-modal-box" style="position:relative">
+    <button class="modal-close" onclick="closeRejectModal()">✕</button>
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:6px">ปฏิเสธคำขอ</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:20px">กรุณาระบุเหตุผลการปฏิเสธ</div>
+    <div class="modal-field" style="margin-bottom:14px">
+      <label style="display:block;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px">เหตุผล</label>
+      <textarea id="reject-reason" rows="3" style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13.5px;resize:vertical;outline:none;transition:border .15s" placeholder="เช่น ช่วงเวลาดังกล่าวมีการประชุมด่วน" onfocus="this.style.borderColor='var(--amber)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-outline" style="flex:1;justify-content:center" onclick="closeRejectModal()">ยกเลิก</button>
+      <button class="btn btn-danger" style="flex:1;justify-content:center;border:1.5px solid var(--red);border-radius:var(--radius)" onclick="confirmReject()">✕ ยืนยันการปฏิเสธ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ROOM FORM MODAL -->
+<div class="modal-overlay" id="room-modal">
+  <div class="room-modal-box" style="position:relative">
+    <div style="background:linear-gradient(135deg,#1A1814 0%,#2C2C2A 100%);padding:20px 24px;display:flex;justify-content:space-between;align-items:center;border-radius:var(--radius-xl) var(--radius-xl) 0 0">
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#F1EFE8" id="room-modal-title">เพิ่มห้องประชุม</div>
+      <button style="background:none;border:none;font-size:20px;color:#888780;cursor:pointer;padding:4px 6px" onclick="closeRoomModal()">✕</button>
+    </div>
+    <div style="padding:24px">
+      <div id="room-form-err" class="modal-err"></div>
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="form-group"><label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px">ชื่อห้อง</label><input type="text" id="rf-name" placeholder="เช่น ห้องบัวหลวง" style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none" onfocus="this.style.borderColor='var(--amber)'" onblur="this.style.borderColor='var(--border)'"></div>
+        <div class="form-group"><label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px">ชั้น / ตำแหน่ง</label><input type="text" id="rf-floor" placeholder="เช่น ชั้น 3" style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none" onfocus="this.style.borderColor='var(--amber)'" onblur="this.style.borderColor='var(--border)'"></div>
+      </div>
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="form-group"><label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px">ความจุ (คน)</label><input type="number" id="rf-cap" placeholder="จำนวนคน" min="1" style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none" onfocus="this.style.borderColor='var(--amber)'" onblur="this.style.borderColor='var(--border)'"></div>
+        <div class="form-group"><label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px">สีห้อง</label><input type="color" id="rf-color" value="#185FA5" style="width:100%;height:44px;padding:4px;border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:20px">
+        <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px">สิ่งอำนวยความสะดวก (คั่นด้วย ,)</label>
+        <input type="text" id="rf-amenities" placeholder="เช่น โปรเจกเตอร์,ไวท์บอร์ด,Video Conference" style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none" onfocus="this.style.borderColor='var(--amber)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-outline" style="flex:1;justify-content:center" onclick="closeRoomModal()">ยกเลิก</button>
+        <button class="btn btn-amber" style="flex:1;justify-content:center" onclick="saveRoom()">บันทึกห้อง</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 
 // 1. นำเข้า Firebase SDK ผ่านช่องทางออนไลน์
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // 2. ข้อมูลคอนฟิกโปรเจกต์ MeetSpace ของคุณ
@@ -453,6 +531,10 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const bookingsRef = collection(db, "bookings");
+const roomsRef = collection(db, "rooms");
+
+// กำหนด email ของ Admin (เปลี่ยนเป็น email ที่ Admin ใช้สมัคร)
+const ADMIN_EMAIL = "admin@gmail.com";
 
 // ════════════════════════════════════════════
 // DATA
@@ -506,7 +588,7 @@ function elapsedSec(b){
 function durationSec(b){return(timeToMin(b.end)-timeToMin(b.start))*60}
 function countdownMin(b){return Math.max(0,timeToMin(b.start)-timeToMin(nowStr()))}
 function getBookedSlots(roomId,date){
-  return state.bookings.filter(b=>b.room===roomId&&b.date===date).flatMap(b=>{
+  return state.bookings.filter(b=>b.room===roomId&&b.date===date&&b.status==='approved').flatMap(b=>{
     const si=HALF_SLOTS.indexOf(b.start),ei=HALF_SLOTS.indexOf(b.end);
     if(si<0)return[];
     return HALF_SLOTS.slice(si,ei);
@@ -519,18 +601,19 @@ function getBookedSlots(roomId,date){
 let state={
   view:'rooms',currentDate:new Date(),sessionId:null,
   filter:'all',search:'',
-  bookings: [], 
-  currentUser: null,
-  form:{title:'',host:'',attendees:'',date:todayStr(),start:'',end:'',catering:[],roomId:'',notes:''}
+  bookings:[],
+  rooms:[],
+  currentUser:null,
+  pendingRejectId:null,
+  editRoomId:null,
+  form:{title:'',host:'',rank:'',attendees:'',date:todayStr(),start:'',end:'',catering:[],roomId:'',notes:''}
 };
 
-function getLive() {
-  return state.bookings.filter(b => getMeetingStatus(b) === 'live');
-}
-
-function getSoon() {
-  return state.bookings.filter(b => getMeetingStatus(b) === 'soon');
-}
+function isAdmin(){return state.currentUser&&state.currentUser.email===ADMIN_EMAIL;}
+function getRooms(){return state.rooms.length>0?state.rooms:ROOMS;}
+function getLive(){return state.bookings.filter(b=>b.status==='approved'&&getMeetingStatus(b)==='live');}
+function getSoon(){return state.bookings.filter(b=>b.status==='approved'&&getMeetingStatus(b)==='soon');}
+function getPending(){return state.bookings.filter(b=>b.status==='pending');}
 
 // ════════════════════════════════════════════
 // UI HELPERS
@@ -544,7 +627,7 @@ function showToast(msg,type=''){
 }
 function switchView(v){
   state.view=v;
-  ['rooms','bookings','new','report'].forEach(x=>{
+  ['rooms','bookings','new','report','admin'].forEach(x=>{
     const el=document.getElementById('nav-'+x);
     if(el)el.classList.toggle('active',x===v);
   });
@@ -560,32 +643,37 @@ function updateClock(){
   const live=getLive().length;
   const badge=document.getElementById('badge-live');
   if(badge){badge.style.display=live>0?'block':'none';badge.textContent=live;}
+  const pending=getPending().length;
+  const pb=document.getElementById('badge-pending');
+  if(pb){pb.style.display=pending>0?'block':'none';pb.textContent=pending;}
 }
 
 function updateSideStats(){
   const today=todayStr();
-  const usedRooms=new Set(state.bookings.filter(b=>b.date===today).map(b=>b.room)).size;
+  const rooms=getRooms();
+  const approved=state.bookings.filter(b=>b.status==='approved');
+  const usedRooms=new Set(approved.filter(b=>b.date===today).map(b=>b.room)).size;
   const an=document.getElementById('avail-num'),tn=document.getElementById('today-num');
-  if(an)an.textContent=ROOMS.length-usedRooms;
-  if(tn)tn.textContent=state.bookings.filter(b=>b.date===today).length;
+  if(an)an.textContent=rooms.length-usedRooms;
+  if(tn)tn.textContent=approved.filter(b=>b.date===today).length;
 }
 
 function tickTimers(){
   document.querySelectorAll('[data-timer]').forEach(el=>{
-    const id=parseInt(el.dataset.timer);
-    const b=state.bookings.find(x=>x.id===id);if(!b)return;
+    const id=el.dataset.timer;
+    const b=state.bookings.find(x=>x.firestoreId===id||String(x.id)===id);if(!b)return;
     const s=getMeetingStatus(b);
     if(s==='live')el.textContent=fmtElapsed(elapsedSec(b));
     else if(s==='soon')el.textContent='อีก '+countdownMin(b)+' นาที';
   });
   document.querySelectorAll('[data-progress]').forEach(el=>{
-    const id=parseInt(el.dataset.progress);
-    const b=state.bookings.find(x=>x.id===id);if(!b)return;
+    const id=el.dataset.progress;
+    const b=state.bookings.find(x=>x.firestoreId===id||String(x.id)===id);if(!b)return;
     el.style.width=Math.min(100,Math.round(elapsedSec(b)/durationSec(b)*100))+'%';
   });
   const se=document.getElementById('session-elapsed');
   if(se&&state.sessionId){
-    const b=state.bookings.find(x=>x.id===state.sessionId);
+    const b=state.bookings.find(x=>x.firestoreId===state.sessionId||String(x.id)===state.sessionId);
     if(b){
       se.textContent=fmtElapsed(elapsedSec(b));
       const sp=document.getElementById('session-progress');
@@ -599,17 +687,19 @@ function tickTimers(){
 // ════════════════════════════════════════════
 function renderLiveBanner(){
   const live=getLive();if(!live.length)return'';
+  const rooms=getRooms();
   const rows=live.map(b=>{
-    const room=ROOMS.find(r=>r.id===b.room);
+    const room=rooms.find(r=>r.id===b.room||r.firestoreId===b.room);
     const pct=Math.min(100,Math.round(elapsedSec(b)/durationSec(b)*100));
+    const bid=b.firestoreId||b.id;
     return`<div class="live-row">
       <div class="live-info">
         <div class="live-title">${b.title}</div>
         <div class="live-meta">${room?.name||''} · ${b.start}–${b.end} · ${b.host} · ${b.attendees} คน</div>
-        <div class="progress-mini"><div class="progress-mini-bar" data-progress="${b.id}" style="width:${pct}%"></div></div>
+        <div class="progress-mini"><div class="progress-mini-bar" data-progress="${bid}" style="width:${pct}%"></div></div>
       </div>
-      <div class="live-timer" data-timer="${b.id}">${fmtElapsed(elapsedSec(b))}</div>
-      <button class="btn btn-session" onclick="startSession(${b.id})">
+      <div class="live-timer" data-timer="${bid}">${fmtElapsed(elapsedSec(b))}</div>
+      <button class="btn btn-session" onclick="startSession('${bid}')">
         <svg viewBox="0 0 16 16" fill="currentColor"><polygon points="4,2 14,8 4,14"/></svg>เข้าการประชุม
       </button>
     </div>`;
@@ -622,15 +712,17 @@ function renderLiveBanner(){
 
 function renderSoonBanner(){
   const soon=getSoon();if(!soon.length)return'';
+  const rooms=getRooms();
   const rows=soon.map(b=>{
-    const room=ROOMS.find(r=>r.id===b.room);
+    const room=rooms.find(r=>r.id===b.room||r.firestoreId===b.room);
+    const bid=b.firestoreId||b.id;
     return`<div class="soon-row">
       <div style="flex:1">
         <div style="font-size:13.5px;font-weight:600;color:var(--text)">${b.title}</div>
         <div style="font-size:12px;color:var(--text2);margin-top:2px">${room?.name||''} · ${b.host}</div>
       </div>
-      <span class="soon-countdown" data-timer="${b.id}">อีก ${countdownMin(b)} นาที</span>
-      <button class="btn btn-session" style="background:var(--amber-bg);color:var(--amber);border:1.5px solid var(--amber-light);padding:7px 14px;font-size:12px" onclick="startSession(${b.id})">
+      <span class="soon-countdown" data-timer="${bid}">อีก ${countdownMin(b)} นาที</span>
+      <button class="btn btn-session" style="background:var(--amber-bg);color:var(--amber);border:1.5px solid var(--amber-light);padding:7px 14px;font-size:12px" onclick="startSession('${bid}')">
         <svg viewBox="0 0 16 16" fill="currentColor" style="width:12px;height:12px"><polygon points="4,2 14,8 4,14"/></svg>เริ่มก่อนเวลา
       </button>
     </div>`;
@@ -638,7 +730,7 @@ function renderSoonBanner(){
   return`<div class="soon-banner">
     <div class="soon-header">
       <svg viewBox="0 0 16 16" fill="none" stroke="var(--amber)" stroke-width="1.5" style="width:14px;height:14px"><circle cx="8" cy="8" r="6.5"/><polyline points="8,4.5 8,8 11,10"/></svg>
-      <span class="soon-label">กำลังจะเริ่ม — ${getSoon().length} รายการ</span>
+      <span class="soon-label">กำลังจะเริ่ม — ${soon.length} รายการ</span>
     </div>
     ${rows}
   </div>`;
@@ -648,18 +740,21 @@ function renderSoonBanner(){
 // ROOMS VIEW
 // ════════════════════════════════════════════
 function renderRooms(){
+  const rooms=getRooms();
   const today=fmt(state.currentDate);
   const dispDate=state.currentDate.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const approvedBookings=state.bookings.filter(b=>b.status==='approved');
   const liveIds=new Set(getLive().map(b=>b.room));
   const soonIds=new Set(getSoon().map(b=>b.room));
-  const cards=ROOMS.map(r=>{
-    const booked=getBookedSlots(r.id,today);
-    const liveSlots=getLive().filter(b=>b.room===r.id).flatMap(b=>{
+  const cards=rooms.map(r=>{
+    const rid=r.firestoreId||r.id;
+    const booked=getBookedSlots(rid,today);
+    const liveSlots=getLive().filter(b=>b.room===rid).flatMap(b=>{
       const si=HALF_SLOTS.indexOf(b.start),ei=HALF_SLOTS.indexOf(b.end);
       if(si<0)return[];return HALF_SLOTS.slice(si,ei);
     });
-    const isLive=liveIds.has(r.id),isSoon=soonIds.has(r.id);
-    const isAvail=!state.bookings.some(b=>b.date===today&&b.room===r.id);
+    const isLive=liveIds.has(rid),isSoon=soonIds.has(rid);
+    const isAvail=!approvedBookings.some(b=>b.date===today&&b.room===rid);
     const slots=TIME_SLOTS.slice(0,8).map(t=>{
       if(liveSlots.includes(t))return`<span class="ts lv">LIVE</span>`;
       if(booked.includes(t))return`<span class="ts bk">${t}</span>`;
@@ -670,7 +765,7 @@ function renderRooms(){
     else if(isSoon)statusBadge=`<span class="room-status-badge" style="background:var(--amber-bg);color:var(--amber)">⏱ เร็วๆ นี้</span>`;
     else if(isAvail)statusBadge=`<span class="room-status-badge status-avail">✓ ว่าง</span>`;
     else statusBadge=`<span class="room-status-badge status-busy">ถูกจอง</span>`;
-    return`<div class="room-card ${isLive?'is-live':isSoon?'is-soon':''}" onclick="state.form.roomId=${r.id};switchView('new')">
+    return`<div class="room-card ${isLive?'is-live':isSoon?'is-soon':''}" onclick="state.form.roomId='${rid}';switchView('new')">
       <div class="room-stripe" style="background:${r.color}"></div>
       <div class="room-header">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -679,21 +774,21 @@ function renderRooms(){
         </div>
       </div>
       <div class="room-body">
-        <div class="room-caps">
-          <span class="room-badge">👥 ${r.cap} คน</span>
-        </div>
+        <div class="room-caps"><span class="room-badge">👥 ${r.cap} คน</span></div>
         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">${r.amenities.map(a=>`<span class="amenity-tag">${a}</span>`).join('')}</div>
         <div style="font-size:10.5px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;font-weight:500">ช่วงเวลาวันนี้</div>
         <div class="time-slots-row">${slots}</div>
         <div style="margin-top:14px">${state.currentUser?
-          `<button class="btn btn-amber" style="width:100%;justify-content:center;font-size:12.5px;padding:8px" onclick="event.stopPropagation();state.form.roomId=${r.id};switchView('new')">+ จองห้องนี้</button>`:
+          `<button class="btn btn-amber" style="width:100%;justify-content:center;font-size:12.5px;padding:8px" onclick="event.stopPropagation();state.form.roomId='${rid}';switchView('new')">+ จองห้องนี้</button>`:
           `<button class="btn btn-outline" style="width:100%;justify-content:center;font-size:12px;padding:7px;color:var(--amber);border-color:var(--amber-light)" onclick="event.stopPropagation();openAuthModal()">🔒 เข้าสู่ระบบเพื่อจอง</button>`
         }</div>
       </div>
     </div>`;
   }).join('');
   const today2=todayStr();
-  const live=getLive().length,avail=ROOMS.length-new Set(state.bookings.filter(b=>b.date===today2).map(b=>b.room)).size;
+  const live=getLive().length;
+  const avail=rooms.length-new Set(approvedBookings.filter(b=>b.date===today2).map(b=>b.room)).size;
+  const pending=getPending().length;
   return`
   <div class="top-bar">
     <div><div class="page-title">ห้องประชุมทั้งหมด</div><div class="page-sub">${dispDate}</div></div>
@@ -706,11 +801,15 @@ function renderRooms(){
       <button class="btn btn-amber" onclick="${state.currentUser?`switchView('new')`:`openAuthModal()`}">+ จองห้อง${!state.currentUser?' (เข้าสู่ระบบ)':''}</button>
     </div>
   </div>
+  ${pending>0&&isAdmin()?`<div style="background:#FFF3CD;border:1px solid #FFDF7E;border-radius:var(--radius-lg);padding:12px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="switchView('admin')">
+    <span style="font-size:18px">⏳</span>
+    <div style="flex:1"><span style="font-weight:600;color:#856404">มีคำขอจองรอการอนุมัติ ${pending} รายการ</span><span style="font-size:12px;color:#997a0a;margin-left:8px">คลิกเพื่อดูและจัดการ →</span></div>
+  </div>`:''}
   <div class="stats-row">
-    <div class="stat-card"><div class="stat-card-num">${ROOMS.length}</div><div class="stat-card-label">ห้องทั้งหมด</div></div>
+    <div class="stat-card"><div class="stat-card-num">${rooms.length}</div><div class="stat-card-label">ห้องทั้งหมด</div></div>
     <div class="stat-card"><div class="stat-card-num" style="color:var(--green)">${avail}</div><div class="stat-card-label">ว่างวันนี้</div></div>
     <div class="stat-card"><div class="stat-card-num" style="color:var(--live)">${live}</div><div class="stat-card-label">ประชุมอยู่</div></div>
-    <div class="stat-card"><div class="stat-card-num" style="color:var(--amber)">${state.bookings.filter(b=>b.date===today2).length}</div><div class="stat-card-label">จองวันนี้</div></div>
+    <div class="stat-card"><div class="stat-card-num" style="color:var(--amber)">${approvedBookings.filter(b=>b.date===today2).length}</div><div class="stat-card-label">จองวันนี้ (อนุมัติ)</div></div>
   </div>
   ${renderLiveBanner()}${renderSoonBanner()}
   <div class="rooms-grid">${cards}</div>`;
@@ -721,7 +820,12 @@ function renderRooms(){
 // ════════════════════════════════════════════
 function renderBookings(){
   const today=todayStr();
+  const rooms=getRooms();
   let list=state.bookings.slice();
+  // user ธรรมดาเห็นแค่ของตัวเอง + ที่ approved
+  if(!isAdmin()&&state.currentUser){
+    list=list.filter(b=>b.userId===state.currentUser.uid||b.status==='approved');
+  }
   if(state.search){
     const q=state.search.toLowerCase();
     list=list.filter(b=>b.title.toLowerCase().includes(q)||b.host.toLowerCase().includes(q));
@@ -729,38 +833,50 @@ function renderBookings(){
   if(state.filter==='today')list=list.filter(b=>b.date===today);
   else if(state.filter==='live')list=list.filter(b=>getMeetingStatus(b)==='live');
   else if(state.filter==='upcoming')list=list.filter(b=>b.date>=today&&getMeetingStatus(b)!=='done');
+  else if(state.filter==='pending')list=list.filter(b=>b.status==='pending');
   list.sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.start||'').localeCompare(b.start||''));
   const cards=list.length?list.map(b=>{
-    const room=ROOMS.find(r=>r.id===b.room);
+    const room=rooms.find(r=>r.id===b.room||r.firestoreId===b.room);
     const status=getMeetingStatus(b);
-    const isLive=status==='live',isSoon=status==='soon';
+    const isLive=status==='live'&&b.status==='approved';
+    const isSoon=status==='soon'&&b.status==='approved';
+    const bid=b.firestoreId||b.id;
     const tags=b.catering.map(c=>{const cat=CATERING.find(x=>x.id===c);return cat?`<span class="tag tag-food">${cat.icon} ${cat.name}</span>`:''}).join('');
-    const statusTag=isLive?`<span class="tag tag-live">● ประชุมอยู่</span>`:isSoon?`<span class="tag tag-soon">⏱ กำลังจะเริ่ม</span>`:'';
-    const timer=isLive?`<span class="booking-timer" style="color:var(--live)" data-timer="${b.id}">${fmtElapsed(elapsedSec(b))}</span>`:
-                isSoon?`<span class="booking-timer" style="color:var(--amber)" data-timer="${b.id}">อีก ${countdownMin(b)} นาที</span>`:'';
-    const todayBadge=b.date===today&&!isLive&&!isSoon?`<span class="tag tag-today">วันนี้</span>`:'';
+    let statusTag='';
+    if(b.status==='pending')statusTag=`<span class="tag tag-pending">⏳ รอการอนุมัติ</span>`;
+    else if(b.status==='rejected')statusTag=`<span class="tag tag-rejected">✕ ถูกปฏิเสธ</span>`;
+    else if(isLive)statusTag=`<span class="tag tag-live">● ประชุมอยู่</span>`;
+    else if(isSoon)statusTag=`<span class="tag tag-soon">⏱ กำลังจะเริ่ม</span>`;
+    else if(b.status==='approved')statusTag=`<span class="tag tag-approved">✓ อนุมัติแล้ว</span>`;
+    const timer=isLive?`<span class="booking-timer" style="color:var(--live)" data-timer="${bid}">${fmtElapsed(elapsedSec(b))}</span>`:
+                isSoon?`<span class="booking-timer" style="color:var(--amber)" data-timer="${bid}">อีก ${countdownMin(b)} นาที</span>`:'';
+    const todayBadge=b.date===today&&!isLive&&!isSoon&&b.status==='approved'?`<span class="tag tag-today">วันนี้</span>`:'';
+    const canEdit=state.currentUser&&(b.userId===state.currentUser.uid||isAdmin())&&b.status==='pending';
+    const canDelete=state.currentUser&&(b.userId===state.currentUser.uid||isAdmin());
     return`<div class="booking-card ${isLive?'is-live':isSoon?'is-soon':''}">
-      <div class="booking-stripe" style="background:${b.color}"></div>
+      <div class="booking-stripe" style="background:${b.color||'#185FA5'}"></div>
       <div class="booking-info">
         <div class="booking-title-row">
           <span class="booking-title">${b.title}</span>
           ${statusTag}${todayBadge}${timer}
         </div>
-        <div class="booking-meta">📅 ${fmtDate(b.date)} &nbsp;⏰ ${b.start||'—'}–${b.end||'—'} &nbsp;👤 ${b.host} &nbsp;👥 ${b.attendees} คน</div>
-        <div class="booking-tags"><span class="tag tag-room">${room?.name||''}</span>${tags}</div>
+        <div class="booking-meta">📅 ${fmtDate(b.date)} &nbsp;⏰ ${b.start||'—'}–${b.end||'—'} &nbsp;👤 ${b.rank?b.rank+' ':''} ${b.host} &nbsp;👥 ${b.attendees} คน</div>
+        ${b.status==='rejected'&&b.rejectReason?`<div style="font-size:12px;color:var(--red);background:var(--red-bg);padding:4px 8px;border-radius:6px;margin-top:6px">เหตุผล: ${b.rejectReason}</div>`:''}
+        <div class="booking-tags"><span class="tag tag-room">${room?.name||b.room}</span>${tags}</div>
       </div>
       <div class="booking-right">
-        ${(isLive||isSoon)?`<button class="btn btn-session ${isSoon?'':'btn-amber'}" style="${isSoon?'background:var(--amber-bg);color:var(--amber);border:1.5px solid var(--amber-light);':''}" onclick="startSession(${b.id})">
+        ${(isLive||isSoon)?`<button class="btn btn-session ${isSoon?'':'btn-amber'}" style="${isSoon?'background:var(--amber-bg);color:var(--amber);border:1.5px solid var(--amber-light);':''}" onclick="startSession('${bid}')">
           <svg viewBox="0 0 16 16" fill="${isSoon?'var(--amber)':'currentColor'}" style="width:12px;height:12px"><polygon points="4,2 14,8 4,14"/></svg>
           ${isSoon?'เริ่มก่อนเวลา':'เข้าประชุม'}
-        </button>`:''  }
+        </button>`:''}
         <div style="display:flex;gap:6px">
-          ${state.currentUser?`<button class="btn btn-outline" style="font-size:12px;padding:5px 10px" onclick="editBooking(${b.id})">แก้ไข</button>
-          <button class="btn btn-danger" onclick="deleteBooking(${b.id})">ลบ</button>`:`<span style="font-size:11px;color:var(--text3);align-self:center">🔒 สมาชิก</span>`}
+          ${canEdit?`<button class="btn btn-outline" style="font-size:12px;padding:5px 10px" onclick="editBooking('${bid}')">แก้ไข</button>`:''}
+          ${canDelete?`<button class="btn btn-danger" onclick="deleteBooking('${bid}')">ลบ</button>`:''}
         </div>
       </div>
     </div>`;
   }).join(''):`<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">ไม่พบการจอง</div><div class="empty-sub">ลองเปลี่ยนตัวกรองหรือ<a onclick="switchView('new')" style="color:var(--amber);cursor:pointer">จองห้องใหม่</a></div></div>`;
+  const pendingCount=getPending().length;
   return`
   <div class="top-bar">
     <div><div class="page-title">การจองทั้งหมด</div><div class="page-sub">${state.bookings.length} รายการ</div></div>
@@ -777,6 +893,7 @@ function renderBookings(){
     <span class="filter-chip ${state.filter==='today'?'active':''}" onclick="state.filter='today';render()">วันนี้</span>
     <span class="filter-chip ${state.filter==='live'?'active':''}" onclick="state.filter='live';render()">● กำลังประชุม</span>
     <span class="filter-chip ${state.filter==='upcoming'?'active':''}" onclick="state.filter='upcoming';render()">ที่กำลังจะมา</span>
+    ${isAdmin()?`<span class="filter-chip ${state.filter==='pending'?'active':''}" onclick="state.filter='pending';render()">⏳ รอการอนุมัติ ${pendingCount>0?`(${pendingCount})`:''}</span>`:''}
   </div>
   ${renderLiveBanner()}${renderSoonBanner()}
   <div class="bookings-list">${cards}</div>`;
@@ -797,18 +914,18 @@ function renderNew(){
       <div class="member-gate-icon">🔒</div>
       <div class="member-gate-text">
         <div class="member-gate-title">กรุณาเข้าสู่ระบบก่อนทำการจอง</div>
-        <div class="member-gate-sub">เฉพาะสมาชิกเท่านั้นที่สามารถจองห้องประชุมได้ ผู้ใช้ทั่วไปสามารถดูข้อมูลห้องได้</div>
+        <div class="member-gate-sub">เฉพาะข้าราชการตำรวจ สภ.งาว เท่านั้นที่สามารถจองห้องประชุมได้</div>
       </div>
       <button class="btn btn-amber" onclick="openAuthModal()">เข้าสู่ระบบ / สมัครสมาชิก</button>
     </div>`;
   }
   const f=state.form;
-  // Auto-fill host จากชื่อสมาชิก
-  if(state.currentUser && !f.host){
-    f.host = state.currentUser.displayName || state.currentUser.email || '';
+  if(state.currentUser&&!f.host){
+    f.host=state.currentUser.displayName||state.currentUser.email||'';
   }
-  const roomOpts=ROOMS.map(r=>`<option value="${r.id}" ${f.roomId==r.id?'selected':''}>${r.name} (${r.floor}, ${r.cap} คน)</option>`).join('');
-  const bookedSlots=f.roomId?getBookedSlots(parseInt(f.roomId),f.date):[];
+  const rooms=getRooms();
+  const roomOpts=rooms.map(r=>`<option value="${r.firestoreId||r.id}" ${f.roomId==(r.firestoreId||r.id)?'selected':''}>${r.name} (${r.floor}, ${r.cap} คน)</option>`).join('');
+  const bookedSlots=f.roomId?getBookedSlots(f.roomId,f.date):[];
   const timeHTML=HALF_SLOTS.map(t=>{
     const isBk=bookedSlots.includes(t);
     let cls='time-btn';
@@ -829,11 +946,12 @@ function renderNew(){
         <div class="catering-desc">${c.desc}</div>
       </div>
     </div>`).join('');
+  const selectedRoom=getRooms().find(r=>r.id==f.roomId||r.firestoreId==f.roomId);
   return`
   <div class="top-bar">
     <div>
       <div class="page-title">จองห้องประชุม</div>
-      <div class="page-sub">กรอกรายละเอียดการจอง</div>
+      <div class="page-sub">กรอกรายละเอียดและส่งคำขอ — Admin จะอนุมัติภายใน 24 ชม.</div>
     </div>
     <button class="btn btn-outline" onclick="switchView('rooms')">← กลับ</button>
   </div>
@@ -843,17 +961,24 @@ function renderNew(){
       <div class="form-section-title">ข้อมูลการประชุม</div>
       <div class="form-group" style="margin-bottom:14px">
         <label>ชื่อการประชุม / กิจกรรม</label>
-        <input type="text" value="${f.title}" placeholder="เช่น ประชุมทีม Marketing" oninput="window.updateFormField('title',this.value)">
+        <input type="text" value="${f.title}" placeholder="เช่น ประชุมชุดปฏิบัติการ" oninput="window.updateFormField('title',this.value)">
       </div>
-      <div class="form-row" style="margin-bottom:0">
-        <div class="form-group"><label>ผู้จอง / เจ้าของการประชุม</label><input type="text" value="${f.host}" placeholder="ชื่อ-นามสกุล" oninput="window.updateFormField('host',this.value)"></div>
+      <div class="form-row" style="margin-bottom:14px">
         <div class="form-group">
-          <label>จำนวนผู้เข้าร่วม</label>
-          <input type="number" id="attendees-input" value="${f.attendees}" placeholder="จำนวนคน" min="1" ${f.roomId?`max="${ROOMS.find(r=>r.id==f.roomId)?.cap||999}"`:''} oninput="window.updateFormField('attendees',this.value);window.checkAttendeeCap(this.value)">
-          ${f.roomId?`<div class="cap-hint">ความจุสูงสุด: ${ROOMS.find(r=>r.id==f.roomId)?.cap||'—'} คน</div>`:''}
-          <div class="attendees-warn ${f.roomId&&f.attendees&&parseInt(f.attendees)>ROOMS.find(r=>r.id==f.roomId)?.cap?'show':''}" id="attendees-warn">
-            ⚠ เกินความจุห้อง! ห้องนี้รองรับได้สูงสุด <strong id="cap-num">${f.roomId?ROOMS.find(r=>r.id==f.roomId)?.cap:''}</strong> คน
-          </div>
+          <label>ยศ</label>
+          <select onchange="window.updateFormField('rank',this.value)">
+            <option value="">— เลือกยศ —</option>
+            ${['พล.ต.ต.','พ.ต.อ.','พ.ต.ท.','พ.ต.ต.','ร.ต.อ.','ร.ต.ท.','ร.ต.ต.','ด.ต.','จ.ส.ต.','ส.ต.อ.','ส.ต.ท.','ส.ต.ต.','พลตำรวจ','เจ้าหน้าที่'].map(r=>`<option value="${r}" ${f.rank===r?'selected':''}>${r}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label>ชื่อผู้จอง</label><input type="text" value="${f.host}" placeholder="ชื่อ-นามสกุล" oninput="window.updateFormField('host',this.value)"></div>
+      </div>
+      <div class="form-group">
+        <label>จำนวนผู้เข้าร่วม</label>
+        <input type="number" id="attendees-input" value="${f.attendees}" placeholder="จำนวนคน" min="1" ${selectedRoom?`max="${selectedRoom.cap}"`:''}oninput="window.updateFormField('attendees',this.value);window.checkAttendeeCap(this.value)">
+        ${selectedRoom?`<div class="cap-hint">ความจุสูงสุด: ${selectedRoom.cap} คน</div>`:''}
+        <div class="attendees-warn ${selectedRoom&&f.attendees&&parseInt(f.attendees)>selectedRoom.cap?'show':''}" id="attendees-warn">
+          ⚠ เกินความจุห้อง! ห้องนี้รองรับได้สูงสุด <strong id="cap-num">${selectedRoom?.cap||''}</strong> คน
         </div>
       </div>
     </div>
@@ -871,7 +996,7 @@ function renderNew(){
       </div>
     </div>
     <div class="form-section">
-      <div class="form-section-title">อาหาร / เครื่องดื่ม (ไม่บังคับ)</div>
+      <div class="form-section-title">ของเบรก / อาหาร (ไม่บังคับ)</div>
       <div class="catering-grid">${cHTML}</div>
     </div>
     <div class="form-section" style="border:none">
@@ -879,7 +1004,7 @@ function renderNew(){
       <div class="form-group">
         <textarea rows="3" placeholder="รายละเอียดเพิ่มเติม ความต้องการพิเศษ ฯลฯ" style="resize:vertical;min-height:80px" oninput="window.updateFormField('notes',this.value)">${f.notes||''}</textarea>
       </div>
-      <button class="btn btn-primary btn-lg" onclick="openConfirmModal()">ดูสรุปและยืนยันการจอง →</button>
+      <button class="btn btn-primary btn-lg" onclick="openConfirmModal()">ดูสรุปและส่งคำขอ →</button>
     </div>
   </div></div>`;
 }
@@ -888,9 +1013,9 @@ function renderNew(){
 // SESSION VIEW
 // ════════════════════════════════════════════
 function renderSession(){
-  const b=state.bookings.find(x=>x.id===state.sessionId);
+  const b=state.bookings.find(x=>x.firestoreId===state.sessionId||String(x.id)===state.sessionId);
   if(!b)return`<div style="padding:60px;text-align:center;color:var(--text2)">ไม่พบข้อมูลการประชุม</div>`;
-  const room=ROOMS.find(r=>r.id===b.room);
+  const room=getRooms().find(r=>r.id===b.room||r.firestoreId===b.room);
   const dur=durationSec(b),elapsed=elapsedSec(b);
   const pct=Math.min(100,Math.round(elapsed/dur*100));
   const cats=b.catering.map(c=>{const cat=CATERING.find(x=>x.id===c);return cat?`<span class="catering-pill">${cat.icon} ${cat.name}</span>`:''}).join('');
@@ -906,7 +1031,7 @@ function renderSession(){
     <div class="session-card">
       <div class="session-room-label">${room?.name||''} · ${room?.floor||''}</div>
       <div class="session-title">${b.title}</div>
-      <div class="session-host">👤 ${b.host} &nbsp;·&nbsp; 👥 ${b.attendees} คน</div>
+      <div class="session-host">👤 ${b.rank?b.rank+' ':''} ${b.host} &nbsp;·&nbsp; 👥 ${b.attendees} คน</div>
       <div class="session-clock" id="session-elapsed">${fmtElapsed(elapsed)}</div>
       <div class="session-clock-label">เวลาที่ใช้ไป</div>
       <div class="session-progress-wrap">
@@ -931,15 +1056,20 @@ function renderSession(){
 // ════════════════════════════════════════════
 function renderReport(){
   const today=todayStr();
-  const totalBookings=state.bookings.length;
-  const todayBookings=state.bookings.filter(b=>b.date===today).length;
-  const roomUsage=ROOMS.map(r=>{
-    const count=state.bookings.filter(b=>r.id===b.room).length;
+  const rooms=getRooms();
+  const approved=state.bookings.filter(b=>b.status==='approved');
+  const totalBookings=approved.length;
+  const todayBookings=approved.filter(b=>b.date===today).length;
+  const pendingCount=getPending().length;
+  const rejectedCount=state.bookings.filter(b=>b.status==='rejected').length;
+  const roomUsage=rooms.map(r=>{
+    const rid=r.firestoreId||r.id;
+    const count=approved.filter(b=>b.room===rid).length;
     const pct=totalBookings?Math.round(count/totalBookings*100):0;
     return{...r,count,pct};
   }).sort((a,b)=>b.count-a.count);
   const cateringCount={};
-  state.bookings.forEach(b=>b.catering.forEach(c=>{cateringCount[c]=(cateringCount[c]||0)+1}));
+  approved.forEach(b=>b.catering.forEach(c=>{cateringCount[c]=(cateringCount[c]||0)+1}));
   const cateringRows=CATERING.filter(c=>cateringCount[c.id]).sort((a,b)=>(cateringCount[b.id]||0)-(cateringCount[a.id]||0)).map(c=>`
     <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
       <span style="font-size:16px">${c.icon}</span>
@@ -958,13 +1088,13 @@ function renderReport(){
     </div>`).join('');
   return`
   <div class="top-bar">
-    <div><div class="page-title">รายงานการใช้งาน</div><div class="page-sub">ภาพรวมระบบจัดการห้องประชุม</div></div>
+    <div><div class="page-title">รายงานการใช้งาน</div><div class="page-sub">ภาพรวมระบบจัดการห้องประชุม สภ.งาว</div></div>
   </div>
   <div class="stats-row">
-    <div class="stat-card"><div class="stat-card-num">${totalBookings}</div><div class="stat-card-label">จองทั้งหมด</div></div>
+    <div class="stat-card"><div class="stat-card-num">${totalBookings}</div><div class="stat-card-label">อนุมัติทั้งหมด</div></div>
     <div class="stat-card"><div class="stat-card-num" style="color:var(--amber)">${todayBookings}</div><div class="stat-card-label">วันนี้</div></div>
-    <div class="stat-card"><div class="stat-card-num" style="color:var(--green)">${state.bookings.filter(b=>getMeetingStatus(b)==='done').length}</div><div class="stat-card-label">เสร็จแล้ว</div></div>
-    <div class="stat-card"><div class="stat-card-num" style="color:var(--blue)">${state.bookings.filter(b=>b.catering.length>0).length}</div><div class="stat-card-label">มีอาหาร</div></div>
+    <div class="stat-card"><div class="stat-card-num" style="color:#856404">${pendingCount}</div><div class="stat-card-label">รอการอนุมัติ</div></div>
+    <div class="stat-card"><div class="stat-card-num" style="color:var(--red)">${rejectedCount}</div><div class="stat-card-label">ถูกปฏิเสธ</div></div>
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;box-shadow:var(--shadow)">
@@ -972,7 +1102,7 @@ function renderReport(){
       ${roomRows}
     </div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;box-shadow:var(--shadow)">
-      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;color:var(--text)">การสั่งอาหาร / เครื่องดื่ม</div>
+      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;color:var(--text)">การสั่งของเบรก / อาหาร</div>
       ${cateringRows||'<div style="color:var(--text3);font-size:13px;padding:20px 0;text-align:center">ยังไม่มีข้อมูล</div>'}
     </div>
   </div>`;
@@ -982,19 +1112,17 @@ function renderReport(){
 // ACTIONS
 // ════════════════════════════════════════════
 async function editBooking(id){
-  const b=state.bookings.find(x=>x.id===id);if(!b)return;
-  state.form={...b,roomId:b.room,catering:[...b.catering]};
-  if(b.firestoreId){
-    await deleteDoc(doc(db, "bookings", b.firestoreId));
-  }
+  const b=state.bookings.find(x=>x.firestoreId===id||String(x.id)===id);if(!b)return;
+  state.form={...b,roomId:b.room,rank:b.rank||'',catering:[...b.catering]};
+  if(b.firestoreId){await deleteDoc(doc(db,'bookings',b.firestoreId));}
   switchView('new');
 }
 
 async function deleteBooking(id){
   if(!confirm('ยืนยันการลบการจองนี้?'))return;
-  const b=state.bookings.find(x=>x.id===id);
-  if(b && b.firestoreId){
-    await deleteDoc(doc(db, "bookings", b.firestoreId));
+  const b=state.bookings.find(x=>x.firestoreId===id||String(x.id)===id);
+  if(b&&b.firestoreId){
+    await deleteDoc(doc(db,'bookings',b.firestoreId));
     showToast('🗑 ลบการจองเรียบร้อยแล้ว');
   }
 }
@@ -1006,20 +1134,17 @@ function checkAttendeeCap(val){
   const f=state.form;
   const warn=document.getElementById('attendees-warn');
   if(!warn)return;
-  const room=ROOMS.find(r=>r.id==f.roomId);
+  const room=getRooms().find(r=>r.id==f.roomId||r.firestoreId==f.roomId);
   if(room&&val&&parseInt(val)>room.cap){
-    document.getElementById('cap-num').textContent=room.cap;
+    const cn=document.getElementById('cap-num');if(cn)cn.textContent=room.cap;
     warn.classList.add('show');
-  }else{
-    warn.classList.remove('show');
-  }
+  }else{warn.classList.remove('show');}
 }
 
 function openConfirmModal(){
-  if(!state.currentUser){openAuthModal();return showToast('⚠ กรุณาเข้าสู่ระบบก่อนทำการจอง');}
-  // sync attendees จาก DOM เพื่อให้ได้ค่าล่าสุดเสมอ
+  if(!state.currentUser){openAuthModal();return showToast('⚠ กรุณาเข้าสู่ระบบก่อน');}
   const inputEl=document.getElementById('attendees-input');
-  if(inputEl) state.form.attendees=inputEl.value;
+  if(inputEl)state.form.attendees=inputEl.value;
   const f=state.form;
   if(!f.title.trim())return showToast('⚠ กรุณากรอกชื่อการประชุม');
   if(!f.host.trim())return showToast('⚠ กรุณากรอกชื่อผู้จอง');
@@ -1027,73 +1152,66 @@ function openConfirmModal(){
   if(!f.date)return showToast('⚠ กรุณาเลือกวันที่');
   if(!f.start||!f.end)return showToast('⚠ กรุณาเลือกช่วงเวลา');
   if(!f.attendees||parseInt(f.attendees)<1)return showToast('⚠ กรุณากรอกจำนวนผู้เข้าร่วม');
-  const room=ROOMS.find(r=>r.id==f.roomId);
+  const room=getRooms().find(r=>r.id==f.roomId||r.firestoreId==f.roomId);
   if(room&&parseInt(f.attendees)>room.cap)return showToast(`⚠ ห้องรองรับได้สูงสุด ${room.cap} คน`);
-  const conflict=state.bookings.find(b=>b.room===parseInt(f.roomId)&&b.date===f.date&&timeToMin(b.start)<timeToMin(f.end)&&timeToMin(b.end)>timeToMin(f.start));
+  const conflict=state.bookings.find(b=>b.room===f.roomId&&b.date===f.date&&b.status==='approved'&&timeToMin(b.start)<timeToMin(f.end)&&timeToMin(b.end)>timeToMin(f.start));
   if(conflict)return showToast('⚠ ช่วงเวลานี้ถูกจองแล้ว กรุณาเลือกเวลาอื่น');
-
-  // Fill modal content
   document.getElementById('cm-title').textContent=f.title;
   document.getElementById('cm-room-badge').textContent='🏢 '+(room?`${room.name} · ${room.floor}`:'—');
   const dateLabel=new Date(f.date+'T00:00').toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   document.getElementById('cm-datetime').textContent=`${dateLabel}  ${f.start} – ${f.end} น. (${timeToMin(f.end)-timeToMin(f.start)} นาที)`;
-  document.getElementById('cm-host').textContent=f.host;
+  document.getElementById('cm-host').textContent=(f.rank?f.rank+' ':'')+f.host;
   document.getElementById('cm-attendees').textContent=`${f.attendees} คน${room?` (ความจุสูงสุด ${room.cap} คน)`:''}`;
-
-  // Catering
   const catEl=document.getElementById('cm-catering');
   if(f.catering.length){
     catEl.innerHTML=f.catering.map(id=>{const c=CATERING.find(x=>x.id===id);return c?`<span class="confirm-catering-pill">${c.icon} ${c.name}</span>`:''}).join('');
   }else{
-    catEl.innerHTML='<span style="font-size:12.5px;color:var(--text3)">ไม่ได้สั่งอาหาร/เครื่องดื่ม</span>';
+    catEl.innerHTML='<span style="font-size:12.5px;color:var(--text3)">ไม่ได้สั่งของเบรก/อาหาร</span>';
   }
-
-  // Notes
   const notesRow=document.getElementById('cm-notes-row');
   if(f.notes&&f.notes.trim()){
     document.getElementById('cm-notes').textContent=f.notes;
     notesRow.style.display='flex';
-  }else{
-    notesRow.style.display='none';
-  }
-
-  const overlay=document.getElementById('confirm-modal');
-  overlay.classList.add('show');
+  }else{notesRow.style.display='none';}
+  document.getElementById('confirm-modal').classList.add('show');
 }
 
-function closeConfirmModal(){
-  document.getElementById('confirm-modal').classList.remove('show');
-}
-
+function closeConfirmModal(){document.getElementById('confirm-modal').classList.remove('show');}
 
 async function submitBooking(){
   if(!state.currentUser){closeConfirmModal();openAuthModal();return;}
   const f=state.form;
-  const room=ROOMS.find(r=>r.id==f.roomId);
+  const room=getRooms().find(r=>r.id==f.roomId||r.firestoreId==f.roomId);
   const newBooking={
     id:Date.now(),
     title:f.title.trim(),
-    room:parseInt(f.roomId),
+    room:f.roomId,
     date:f.date,
     start:f.start,
     end:f.end,
     host:f.host.trim(),
+    rank:f.rank||'',
     attendees:parseInt(f.attendees),
     catering:[...f.catering],
     notes:f.notes||'',
-    color:room?room.color:'#185FA5'
+    color:room?room.color:'#185FA5',
+    status:'pending',
+    userId:state.currentUser.uid,
+    userEmail:state.currentUser.email,
+    createdAt:new Date().toISOString()
   };
   try{
     await addDoc(bookingsRef,newBooking);
     closeConfirmModal();
-    state.form={title:'',host:'',attendees:'',date:todayStr(),start:'',end:'',catering:[],roomId:'',notes:''};
-    showToast('✓ จองห้องประชุมสำเร็จ!');
+    state.form={title:'',host:'',rank:'',attendees:'',date:todayStr(),start:'',end:'',catering:[],roomId:'',notes:''};
+    showToast('✓ ส่งคำขอจองสำเร็จ — รอ Admin อนุมัติ');
     switchView('bookings');
   }catch(error){
     showToast('❌ การเชื่อมต่อล้มเหลว กรุณาเช็กสิทธิ์ Firestore');
     console.error(error);
   }
 }
+
 
 
 function selectTime(t) {
@@ -1169,20 +1287,23 @@ function clearTimeSelect() {
   render();
 }
 
-// เฝ้าดูการจองออนไลน์ ถ้าใครกดจองหรือลบ หน้าจอของทุกคนจะเปลี่ยนตามกันทันทีโดยไม่ต้องรีเฟรช
-// ป้องกัน MaxListenersExceededWarning ด้วยการ unsubscribe ก่อน subscribe ใหม่ทุกครั้ง
+// เฝ้าดูการจองออนไลน์
 let _unsubSnapshot = null;
 if (_unsubSnapshot) _unsubSnapshot();
 _unsubSnapshot = onSnapshot(query(bookingsRef), (snapshot) => {
   state.bookings = [];
-  snapshot.forEach((doc) => {
-    state.bookings.push({
-      firestoreId: doc.id,
-      ...doc.data()
-    });
-  });
-  render(); 
+  snapshot.forEach((d) => {state.bookings.push({firestoreId:d.id,...d.data()});});
+  render();
   updateSideStats();
+});
+
+// เฝ้าดูห้องประชุมออนไลน์
+let _unsubRooms = null;
+if (_unsubRooms) _unsubRooms();
+_unsubRooms = onSnapshot(query(roomsRef), (snapshot) => {
+  state.rooms = [];
+  snapshot.forEach((d) => {state.rooms.push({firestoreId:d.id,id:d.id,...d.data()});});
+  render();
 });
 
 // ════════════════════════════════════════════
@@ -1224,6 +1345,7 @@ async function doLogin(){
 }
 async function doRegister(){
   const name=document.getElementById('reg-name').value.trim();
+  const rank=document.getElementById('reg-rank').value;
   const email=document.getElementById('reg-email').value.trim();
   const pass=document.getElementById('reg-pass').value;
   if(!name)return showAuthErr('กรุณากรอกชื่อ');
@@ -1231,10 +1353,11 @@ async function doRegister(){
   if(pass.length<6)return showAuthErr('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
   try{
     const cred=await createUserWithEmailAndPassword(auth,email,pass);
-    await updateProfile(cred.user,{displayName:name});
-    state.currentUser={...cred.user,displayName:name};
+    const displayName=(rank?rank+' ':'')+name;
+    await updateProfile(cred.user,{displayName});
+    state.currentUser={...cred.user,displayName};
     closeAuthModal();
-    showToast('✓ สมัครสมาชิกและเข้าสู่ระบบสำเร็จ!');
+    showToast('✓ สมัครสมาชิกสำเร็จ!');
     renderSidebarUser();
   }catch(e){
     const msgs={'auth/email-already-in-use':'อีเมลนี้ถูกใช้แล้ว','auth/invalid-email':'อีเมลไม่ถูกต้อง','auth/weak-password':'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'};
@@ -1245,18 +1368,20 @@ async function doSignOut(){
   await signOut(auth);
   state.currentUser=null;
   showToast('ออกจากระบบแล้ว');
-  renderSidebarUser();
-  render();
+  renderSidebarUser();render();
 }
 function renderSidebarUser(){
   const el=document.getElementById('sidebar-user-area');
   if(!el)return;
+  const adminNav=document.getElementById('nav-admin');
+  if(adminNav)adminNav.style.display=isAdmin()?'flex':'none';
   if(state.currentUser){
     const initial=(state.currentUser.displayName||state.currentUser.email||'?')[0].toUpperCase();
     const name=state.currentUser.displayName||state.currentUser.email;
+    const adminBadge=isAdmin()?`<span style="font-size:9px;color:var(--amber);background:rgba(201,123,26,.15);padding:1px 5px;border-radius:3px;font-weight:600;margin-left:4px">ADMIN</span>`:'';
     el.innerHTML=`<div class="user-bar">
-      <div class="user-avatar">${initial}</div>
-      <div style="flex:1;min-width:0"><div class="user-name">${name}</div><div class="user-role">สมาชิก</div></div>
+      <div class="user-avatar ${isAdmin()?'admin-av':''}">${initial}</div>
+      <div style="flex:1;min-width:0"><div class="user-name">${name}${adminBadge}</div><div class="user-role">${isAdmin()?'ผู้ดูแลระบบ':'ข้าราชการตำรวจ'}</div></div>
       <button class="btn-signout" onclick="doSignOut()">ออก</button>
     </div>`;
   }else{
@@ -1267,12 +1392,161 @@ function renderSidebarUser(){
   }
 }
 
-let _unsubAuth = null;
-if (_unsubAuth) _unsubAuth();
-_unsubAuth = onAuthStateChanged(auth,(user)=>{
-  state.currentUser=user;
+// ════════════════════════════════════════════
+// ADMIN VIEW
+// ════════════════════════════════════════════
+function renderAdmin(){
+  if(!isAdmin())return`<div class="empty-state"><div class="empty-icon">🔐</div><div class="empty-title">เฉพาะผู้ดูแลระบบ</div><div class="empty-sub">คุณไม่มีสิทธิ์เข้าถึงหน้านี้</div></div>`;
+  const rooms=getRooms();
+  const pending=getPending().sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.start||'').localeCompare(b.start||''));
+  const pendingCards=pending.length?pending.map(b=>{
+    const room=rooms.find(r=>r.id===b.room||r.firestoreId===b.room);
+    const bid=b.firestoreId||b.id;
+    const dateLabel=new Date(b.date+'T00:00').toLocaleDateString('th-TH',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
+    const cats=b.catering.map(c=>{const cat=CATERING.find(x=>x.id===c);return cat?`<span style="font-size:10.5px;background:var(--amber-bg);color:var(--amber);padding:2px 7px;border-radius:4px;font-weight:500">${cat.icon} ${cat.name}</span>`:''}).join('');
+    return`<div class="pending-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+        <div style="flex:1;min-width:200px">
+          <div style="font-weight:700;font-size:15px;margin-bottom:4px">${b.title}</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:4px">📅 ${dateLabel} &nbsp;⏰ ${b.start}–${b.end} &nbsp;🏢 ${room?.name||b.room}</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:4px">👤 ${b.rank?b.rank+' ':''} ${b.host} &nbsp;👥 ${b.attendees} คน</div>
+          ${cats?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px">${cats}</div>`:''}
+          ${b.notes?`<div style="font-size:11.5px;color:var(--text3)">📝 ${b.notes}</div>`:''}
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+          <button class="btn btn-success" style="border:1.5px solid var(--green)" onclick="approveBooking('${bid}')">✓ อนุมัติ</button>
+          <button class="btn btn-danger" onclick="openRejectModal('${bid}')">✕ ปฏิเสธ</button>
+        </div>
+      </div>
+    </div>`;
+  }).join(''):`<div class="empty-state" style="padding:32px 20px"><div class="empty-icon">✅</div><div class="empty-title">ไม่มีคำขอรอการอนุมัติ</div></div>`;
+  const roomCards=rooms.map(r=>`
+    <div class="room-manage-card">
+      <div style="width:12px;height:48px;border-radius:4px;background:${r.color};flex-shrink:0"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:13.5px">${r.name}</div>
+        <div style="font-size:11.5px;color:var(--text2);margin-top:2px">${r.floor} · ${r.cap} คน · ${r.amenities.join(', ')}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn btn-outline" style="font-size:12px;padding:5px 10px" onclick="openEditRoom('${r.firestoreId||r.id}')">แก้ไข</button>
+        <button class="btn btn-danger" onclick="deleteRoom('${r.firestoreId||r.id}')">ลบ</button>
+      </div>
+    </div>`).join('');
+  return`
+  <div class="top-bar">
+    <div>
+      <div class="page-title">จัดการระบบ</div>
+      <div class="page-sub" style="display:flex;align-items:center;gap:8px"><span class="admin-badge">👑 Admin</span> ผู้ดูแลระบบ MeetSpace สภ.งาว</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:20px;box-shadow:var(--shadow)">
+      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px">คำขอรอการอนุมัติ (${pending.length})</div>
+      ${pendingCards}
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:20px;box-shadow:var(--shadow)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px">จัดการห้องประชุม</div>
+        <button class="btn btn-amber" style="padding:7px 14px;font-size:12px" onclick="openAddRoom()">+ เพิ่มห้อง</button>
+      </div>
+      ${roomCards}
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════
+// ADMIN BOOKING ACTIONS
+// ════════════════════════════════════════════
+async function approveBooking(id){
+  try{
+    await updateDoc(doc(db,'bookings',id),{status:'approved',approvedBy:state.currentUser.uid,approvedAt:new Date().toISOString()});
+    showToast('✓ อนุมัติคำขอเรียบร้อยแล้ว');
+  }catch(e){showToast('❌ เกิดข้อผิดพลาด: '+e.message);}
+}
+function openRejectModal(id){
+  state.pendingRejectId=id;
+  document.getElementById('reject-reason').value='';
+  document.getElementById('reject-modal').classList.add('show');
+}
+function closeRejectModal(){document.getElementById('reject-modal').classList.remove('show');state.pendingRejectId=null;}
+async function confirmReject(){
+  const reason=document.getElementById('reject-reason').value.trim();
+  if(!reason)return showToast('⚠ กรุณาระบุเหตุผล');
+  try{
+    await updateDoc(doc(db,'bookings',state.pendingRejectId),{status:'rejected',rejectReason:reason,rejectedBy:state.currentUser.uid,rejectedAt:new Date().toISOString()});
+    closeRejectModal();showToast('✕ ปฏิเสธคำขอเรียบร้อยแล้ว');
+  }catch(e){showToast('❌ เกิดข้อผิดพลาด: '+e.message);}
+}
+
+// ════════════════════════════════════════════
+// ROOM CRUD (Admin)
+// ════════════════════════════════════════════
+function openAddRoom(){
+  state.editRoomId=null;
+  document.getElementById('room-modal-title').textContent='เพิ่มห้องประชุม';
+  document.getElementById('rf-name').value='';
+  document.getElementById('rf-floor').value='';
+  document.getElementById('rf-cap').value='';
+  document.getElementById('rf-color').value='#185FA5';
+  document.getElementById('rf-amenities').value='';
+  document.getElementById('room-form-err').classList.remove('show');
+  document.getElementById('room-modal').classList.add('show');
+}
+function openEditRoom(id){
+  const rooms=getRooms();
+  const r=rooms.find(x=>x.id===id||x.firestoreId===id);if(!r)return;
+  state.editRoomId=r.firestoreId||null;
+  document.getElementById('room-modal-title').textContent='แก้ไขห้องประชุม';
+  document.getElementById('rf-name').value=r.name;
+  document.getElementById('rf-floor').value=r.floor;
+  document.getElementById('rf-cap').value=r.cap;
+  document.getElementById('rf-color').value=r.color||'#185FA5';
+  document.getElementById('rf-amenities').value=r.amenities.join(',');
+  document.getElementById('room-form-err').classList.remove('show');
+  document.getElementById('room-modal').classList.add('show');
+}
+function closeRoomModal(){document.getElementById('room-modal').classList.remove('show');state.editRoomId=null;}
+async function saveRoom(){
+  const name=document.getElementById('rf-name').value.trim();
+  const floor=document.getElementById('rf-floor').value.trim();
+  const cap=parseInt(document.getElementById('rf-cap').value);
+  const color=document.getElementById('rf-color').value;
+  const amenities=document.getElementById('rf-amenities').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const errEl=document.getElementById('room-form-err');
+  if(!name){errEl.textContent='กรุณากรอกชื่อห้อง';errEl.classList.add('show');return;}
+  if(!floor){errEl.textContent='กรุณากรอกชั้น/ตำแหน่ง';errEl.classList.add('show');return;}
+  if(!cap||cap<1){errEl.textContent='กรุณากรอกความจุ';errEl.classList.add('show');return;}
+  errEl.classList.remove('show');
+  const data={name,floor,cap,color,amenities};
+  try{
+    if(state.editRoomId){
+      await updateDoc(doc(db,'rooms',state.editRoomId),data);
+      showToast('✓ แก้ไขข้อมูลห้องสำเร็จ');
+    }else{
+      await addDoc(roomsRef,{...data,createdAt:new Date().toISOString()});
+      showToast('✓ เพิ่มห้องประชุมสำเร็จ');
+    }
+    closeRoomModal();
+  }catch(e){showToast('❌ เกิดข้อผิดพลาด: '+e.message);}
+}
+async function deleteRoom(id){
+  if(!confirm('ยืนยันการลบห้องนี้?'))return;
+  const r=state.rooms.find(x=>x.firestoreId===id||x.id===id);
+  if(r&&r.firestoreId){
+    await deleteDoc(doc(db,'rooms',r.firestoreId));
+    showToast('🗑 ลบห้องเรียบร้อย');
+  }else{
+    showToast('⚠ ไม่สามารถลบห้อง Default ได้ — เพิ่มห้องผ่าน Firebase ก่อน');
+  }
+}
+
+// ─── AUTH STATE LISTENER ───
+// render() ครั้งแรกต้องรอ auth ก่อน ไม่งั้น isAdmin() = false เสมอ
+onAuthStateChanged(auth, (user) => {
+  state.currentUser = user;
   renderSidebarUser();
   render();
+  updateSideStats();
 });
 
 // ════════════════════════════════════════════
@@ -1285,14 +1559,14 @@ function render(){
   else if(state.view==='bookings')main.innerHTML=renderBookings();
   else if(state.view==='new')main.innerHTML=renderNew();
   else if(state.view==='report')main.innerHTML=renderReport();
+  else if(state.view==='admin')main.innerHTML=renderAdmin();
   updateSideStats();
 }
 
-render();
+// clock และ timer เริ่มทำงานทันที ไม่ต้องรอ auth
 updateClock();
-setInterval(updateClock,1000);
-setInterval(tickTimers,1000);
-setInterval(()=>{if(state.view!=='session')render();updateSideStats();},30000);
+setInterval(updateClock, 1000);
+setInterval(tickTimers, 1000);
 
 // ผูกฟังก์ชันให้เชื่อมเข้ากับหน้าเว็บหลัก
 window.switchView = switchView;
@@ -1317,6 +1591,15 @@ window.doSignOut = doSignOut;
 window.openConfirmModal = openConfirmModal;
 window.closeConfirmModal = closeConfirmModal;
 window.checkAttendeeCap = checkAttendeeCap;
+window.approveBooking = approveBooking;
+window.openRejectModal = openRejectModal;
+window.closeRejectModal = closeRejectModal;
+window.confirmReject = confirmReject;
+window.openAddRoom = openAddRoom;
+window.openEditRoom = openEditRoom;
+window.closeRoomModal = closeRoomModal;
+window.saveRoom = saveRoom;
+window.deleteRoom = deleteRoom;
 window.state = state;
 window.render = render;
 
