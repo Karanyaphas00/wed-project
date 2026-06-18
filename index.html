@@ -23,7 +23,7 @@
   --shadow-md:0 4px 24px rgba(26,24,20,.10);
   --shadow-lg:0 8px 40px rgba(26,24,20,.13);
 }
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 .app{display:grid;grid-template-columns:268px 1fr;min-height:100vh}
 
 /* ─── SIDEBAR ─── */
@@ -239,13 +239,44 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .search-input:focus{border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-bg)}
 .search-input::placeholder{color:var(--text3)}
 
+/* ─── MOBILE TOPBAR ─── */
+.mobile-topbar{display:none;align-items:center;gap:14px;background:var(--text);padding:14px 18px;position:sticky;top:0;z-index:55}
+.mobile-menu-btn{background:none;border:none;color:#F1EFE8;cursor:pointer;padding:4px;display:flex;align-items:center;flex-shrink:0}
+.mobile-menu-btn svg{width:22px;height:22px}
+.mobile-topbar-logo{display:flex;align-items:center;gap:8px;font-family:'Syne',sans-serif;font-weight:700;color:#F9F7F4;font-size:15px}
+.mobile-topbar-logo .logo-icon{width:26px;height:26px}
+.mobile-topbar-logo .logo-icon svg{width:14px;height:14px}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(26,24,20,.5);z-index:59;opacity:0;transition:opacity .2s}
+.sidebar-overlay.show{display:block;opacity:1}
+
 @media(max-width:900px){
   .app{grid-template-columns:1fr}
-  .sidebar{display:none}
+  .mobile-topbar{display:flex}
+  .sidebar{position:fixed;top:0;left:0;height:100vh;width:268px;z-index:60;transform:translateX(-100%);transition:transform .25s ease;box-shadow:var(--shadow-lg)}
+  .sidebar.open{transform:translateX(0)}
   .main{padding:20px 18px}
   .stats-row{grid-template-columns:1fr 1fr}
   .time-grid{grid-template-columns:repeat(4,1fr)}
   .catering-grid{grid-template-columns:1fr 1fr}
+}
+
+@media(max-width:600px){
+  .stats-row{grid-template-columns:1fr 1fr}
+  .time-grid{grid-template-columns:repeat(3,1fr)}
+  .catering-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .top-bar{flex-direction:column;align-items:stretch}
+  .top-actions{width:100%}
+  .search-wrap{max-width:none}
+  .rooms-grid{grid-template-columns:1fr}
+  .form-panel{padding:20px}
+  .session-card{padding:24px 18px}
+  .session-meta{gap:16px;flex-wrap:wrap}
+  .session-clock{font-size:44px}
+  .confirm-body,.confirm-header{padding-left:18px;padding-right:18px}
+  .confirm-footer{padding-left:18px;padding-right:18px}
+  .modal-box{padding:26px 22px}
+  .date-nav-text{min-width:0}
 }
 
 /* ─── AUTH MODAL ─── */
@@ -324,6 +355,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 </style>
 </head>
 <body>
+
+<div class="mobile-topbar">
+  <button class="mobile-menu-btn" onclick="window.toggleMobileSidebar()" aria-label="เปิดเมนู">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="5" x2="17" y2="5"/><line x1="3" y1="10" x2="17" y2="10"/><line x1="3" y1="15" x2="17" y2="15"/></svg>
+  </button>
+  <div class="mobile-topbar-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 20 20"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></svg>
+    </div>
+    <span>MeetSpace</span>
+  </div>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="window.toggleMobileSidebar(false)"></div>
 
 <div class="app">
 <div class="sidebar">
@@ -548,8 +592,8 @@ const CATERING=[
   {id:'water',name:'น้ำดื่ม',desc:'น้ำเปล่าและเครื่องดื่ม',icon:'💧'},
   {id:'dinner',name:'อาหารเย็น',desc:'สำหรับประชุมดึก',icon:'🍽️'},
 ];
-const TIME_SLOTS=['08:30','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:30'];
-const HALF_SLOTS=['08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'];
+const TIME_SLOTS=['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:30'];
+const HALF_SLOTS=['08:30','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'];
   
 // ════════════════════════════════════════════
 // HELPERS
@@ -624,7 +668,17 @@ function switchView(v){
     const el=document.getElementById('nav-'+x);
     if(el)el.classList.toggle('active',x===v);
   });
+  toggleMobileSidebar(false);
   render();
+}
+
+function toggleMobileSidebar(force){
+  const sb=document.querySelector('.sidebar');
+  const ov=document.getElementById('sidebar-overlay');
+  if(!sb||!ov)return;
+  const show=typeof force==='boolean'?force:!sb.classList.contains('open');
+  sb.classList.toggle('open',show);
+  ov.classList.toggle('show',show);
 }
 
 function updateClock(){
@@ -1568,6 +1622,7 @@ setInterval(tickTimers, 1000);
 
 // ผูกฟังก์ชันให้เชื่อมเข้ากับหน้าเว็บหลัก
 window.switchView = switchView;
+window.toggleMobileSidebar = toggleMobileSidebar;
 window.editBooking = editBooking;
 window.deleteBooking = deleteBooking;
 window.submitBooking = submitBooking;
