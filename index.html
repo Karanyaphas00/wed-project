@@ -539,14 +539,7 @@ const ADMIN_EMAIL = "admin@gmail.com";
 // ════════════════════════════════════════════
 // DATA
 // ════════════════════════════════════════════
-const ROOMS=[
-  {id:1,name:'ห้องบัวหลวง',floor:'ชั้น 3',cap:12,color:'#185FA5',amenities:['โปรเจกเตอร์','ไวท์บอร์ด','Video Conference']},
-  {id:2,name:'ห้องสุวรรณภูมิ',floor:'ชั้น 4',cap:30,color:'#3B6D11',amenities:['LED Screen 86"','ไมโครโฟน','Video Conference']},
-  {id:3,name:'ห้องอโยธยา',floor:'ชั้น 3',cap:6,color:'#D85A30',amenities:['TV 55"','ไวท์บอร์ด']},
-  {id:4,name:'ห้องเชียงแสน',floor:'ชั้น 5',cap:20,color:'#533AB7',amenities:['โปรเจกเตอร์','Video Conference','Sound System']},
-  {id:5,name:'ห้องสุโขทัย',floor:'ชั้น 2',cap:8,color:'#0F6E56',amenities:['TV 65"','ไวท์บอร์ด','Webcam']},
-  {id:6,name:'ห้องลานนา',floor:'ชั้น 5',cap:50,color:'#993C1D',amenities:['ระบบ PA','LED Screen 120"','Video Conference']},
-];
+const ROOMS=[];
 const CATERING=[
   {id:'coffee',name:'ชา-กาแฟ',desc:'กาแฟ ชา น้ำผลไม้',icon:'☕'},
   {id:'snack',name:'อาหารว่าง',desc:'ขนม คุกกี้ แซนด์วิช',icon:'🍪'},
@@ -555,9 +548,9 @@ const CATERING=[
   {id:'water',name:'น้ำดื่ม',desc:'น้ำเปล่าและเครื่องดื่ม',icon:'💧'},
   {id:'dinner',name:'อาหารเย็น',desc:'สำหรับประชุมดึก',icon:'🍽️'},
 ];
-const TIME_SLOTS=['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
-const HALF_SLOTS=['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00'];
-
+const TIME_SLOTS=['08:30','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:30'];
+const HALF_SLOTS=['08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'];
+  
 // ════════════════════════════════════════════
 // HELPERS
 // ════════════════════════════════════════════
@@ -606,7 +599,7 @@ let state={
   currentUser:null,
   pendingRejectId:null,
   editRoomId:null,
-  form:{title:'',host:'',rank:'',attendees:'',date:todayStr(),start:'',end:'',catering:[],roomId:'',notes:''}
+  form:{title:'',host:'',rank:'',attendees:'',date:todayStr(),start:'',end:'',catering:[],cateringNote:'',roomId:'',notes:''}
 };
 
 function isAdmin(){return state.currentUser&&state.currentUser.email===ADMIN_EMAIL;}
@@ -841,7 +834,7 @@ function renderBookings(){
     const isLive=status==='live'&&b.status==='approved';
     const isSoon=status==='soon'&&b.status==='approved';
     const bid=b.firestoreId||b.id;
-    const tags=b.catering.map(c=>{const cat=CATERING.find(x=>x.id===c);return cat?`<span class="tag tag-food">${cat.icon} ${cat.name}</span>`:''}).join('');
+    const tags=b.catering.map(c=>{const cat=CATERING.find(x=>x.id===c);return cat?`<span class="tag tag-food">${cat.icon} ${cat.name}</span>`:''}).join('')+(b.cateringNote&&b.cateringNote.trim()?`<span class="tag tag-food">📝 ${b.cateringNote}</span>`:'');
     let statusTag='';
     if(b.status==='pending')statusTag=`<span class="tag tag-pending">⏳ รอการอนุมัติ</span>`;
     else if(b.status==='rejected')statusTag=`<span class="tag tag-rejected">✕ ถูกปฏิเสธ</span>`;
@@ -852,7 +845,7 @@ function renderBookings(){
                 isSoon?`<span class="booking-timer" style="color:var(--amber)" data-timer="${bid}">อีก ${countdownMin(b)} นาที</span>`:'';
     const todayBadge=b.date===today&&!isLive&&!isSoon&&b.status==='approved'?`<span class="tag tag-today">วันนี้</span>`:'';
     const canEdit=state.currentUser&&(b.userId===state.currentUser.uid||isAdmin())&&b.status==='pending';
-    const canDelete=state.currentUser&&(b.userId===state.currentUser.uid||isAdmin());
+    const canDelete=state.currentUser&&(isAdmin()||(b.userId===state.currentUser.uid&&b.status==='pending'));
     return`<div class="booking-card ${isLive?'is-live':isSoon?'is-soon':''}">
       <div class="booking-stripe" style="background:${b.color||'#185FA5'}"></div>
       <div class="booking-info">
@@ -998,6 +991,10 @@ function renderNew(){
     <div class="form-section">
       <div class="form-section-title">ของเบรก / อาหาร (ไม่บังคับ)</div>
       <div class="catering-grid">${cHTML}</div>
+      <div class="form-group" style="margin-top:12px">
+        <label>ระบุรายการอาหาร/เครื่องดื่มอื่นๆ เพิ่มเติม</label>
+        <textarea rows="2" placeholder="เช่น กาแฟไม่ใส่นม 5 แก้ว, น้ำส้ม, ขนมเค้ก ฯลฯ" style="resize:vertical;min-height:54px" oninput="window.updateFormField('cateringNote',this.value)">${f.cateringNote||''}</textarea>
+      </div>
     </div>
     <div class="form-section" style="border:none">
       <div class="form-section-title">หมายเหตุเพิ่มเติม</div>
@@ -1018,7 +1015,7 @@ function renderSession(){
   const room=getRooms().find(r=>r.id===b.room||r.firestoreId===b.room);
   const dur=durationSec(b),elapsed=elapsedSec(b);
   const pct=Math.min(100,Math.round(elapsed/dur*100));
-  const cats=b.catering.map(c=>{const cat=CATERING.find(x=>x.id===c);return cat?`<span class="catering-pill">${cat.icon} ${cat.name}</span>`:''}).join('');
+  const cats=b.catering.map(c=>{const cat=CATERING.find(x=>x.id===c);return cat?`<span class="catering-pill">${cat.icon} ${cat.name}</span>`:''}).join('')+(b.cateringNote&&b.cateringNote.trim()?`<span class="catering-pill">📝 ${b.cateringNote}</span>`:'');
   return`
   <div class="session-wrap">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
@@ -1043,7 +1040,7 @@ function renderSession(){
         <div class="session-meta-item"><div class="session-meta-val">${timeToMin(b.end)-timeToMin(b.start)} นาที</div><div class="session-meta-key">ระยะเวลา</div></div>
         <div class="session-meta-item"><div class="session-meta-val">${Math.max(0,timeToMin(b.end)-timeToMin(nowStr()))} นาที</div><div class="session-meta-key">คงเหลือ</div></div>
       </div>
-      ${b.catering.length?`<div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;font-weight:500;margin-bottom:10px">อาหาร / เครื่องดื่ม</div><div class="catering-pills">${cats}</div>`:''}
+      ${(b.catering.length||(b.cateringNote&&b.cateringNote.trim()))?`<div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;font-weight:500;margin-bottom:10px">อาหาร / เครื่องดื่ม</div><div class="catering-pills">${cats}</div>`:''}
       <div class="session-actions">
         <button class="btn btn-outline" onclick="endSession()">⏹ จบการประชุม</button>
       </div>
@@ -1113,7 +1110,7 @@ function renderReport(){
 // ════════════════════════════════════════════
 async function editBooking(id){
   const b=state.bookings.find(x=>x.firestoreId===id||String(x.id)===id);if(!b)return;
-  state.form={...b,roomId:b.room,rank:b.rank||'',catering:[...b.catering]};
+  state.form={...b,roomId:b.room,rank:b.rank||'',catering:[...b.catering],cateringNote:b.cateringNote||''};
   if(b.firestoreId){await deleteDoc(doc(db,'bookings',b.firestoreId));}
   switchView('new');
 }
@@ -1163,11 +1160,11 @@ function openConfirmModal(){
   document.getElementById('cm-host').textContent=(f.rank?f.rank+' ':'')+f.host;
   document.getElementById('cm-attendees').textContent=`${f.attendees} คน${room?` (ความจุสูงสุด ${room.cap} คน)`:''}`;
   const catEl=document.getElementById('cm-catering');
-  if(f.catering.length){
-    catEl.innerHTML=f.catering.map(id=>{const c=CATERING.find(x=>x.id===id);return c?`<span class="confirm-catering-pill">${c.icon} ${c.name}</span>`:''}).join('');
-  }else{
-    catEl.innerHTML='<span style="font-size:12.5px;color:var(--text3)">ไม่ได้สั่งของเบรก/อาหาร</span>';
+  let catHTML=f.catering.length?f.catering.map(id=>{const c=CATERING.find(x=>x.id===id);return c?`<span class="confirm-catering-pill">${c.icon} ${c.name}</span>`:''}).join(''):'';
+  if(f.cateringNote&&f.cateringNote.trim()){
+    catHTML+=`<span class="confirm-catering-pill">📝 ${f.cateringNote.trim()}</span>`;
   }
+  catEl.innerHTML=catHTML||'<span style="font-size:12.5px;color:var(--text3)">ไม่ได้สั่งของเบรก/อาหาร</span>';
   const notesRow=document.getElementById('cm-notes-row');
   if(f.notes&&f.notes.trim()){
     document.getElementById('cm-notes').textContent=f.notes;
@@ -1193,6 +1190,7 @@ async function submitBooking(){
     rank:f.rank||'',
     attendees:parseInt(f.attendees),
     catering:[...f.catering],
+    cateringNote:f.cateringNote?f.cateringNote.trim():'',
     notes:f.notes||'',
     color:room?room.color:'#185FA5',
     status:'pending',
@@ -1203,7 +1201,7 @@ async function submitBooking(){
   try{
     await addDoc(bookingsRef,newBooking);
     closeConfirmModal();
-    state.form={title:'',host:'',rank:'',attendees:'',date:todayStr(),start:'',end:'',catering:[],roomId:'',notes:''};
+    state.form={title:'',host:'',rank:'',attendees:'',date:todayStr(),start:'',end:'',catering:[],cateringNote:'',roomId:'',notes:''};
     showToast('✓ ส่งคำขอจองสำเร็จ — รอ Admin อนุมัติ');
     switchView('bookings');
   }catch(error){
@@ -1403,7 +1401,7 @@ function renderAdmin(){
     const room=rooms.find(r=>r.id===b.room||r.firestoreId===b.room);
     const bid=b.firestoreId||b.id;
     const dateLabel=new Date(b.date+'T00:00').toLocaleDateString('th-TH',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
-    const cats=b.catering.map(c=>{const cat=CATERING.find(x=>x.id===c);return cat?`<span style="font-size:10.5px;background:var(--amber-bg);color:var(--amber);padding:2px 7px;border-radius:4px;font-weight:500">${cat.icon} ${cat.name}</span>`:''}).join('');
+    const cats=b.catering.map(c=>{const cat=CATERING.find(x=>x.id===c);return cat?`<span style="font-size:10.5px;background:var(--amber-bg);color:var(--amber);padding:2px 7px;border-radius:4px;font-weight:500">${cat.icon} ${cat.name}</span>`:''}).join('')+(b.cateringNote&&b.cateringNote.trim()?`<span style="font-size:10.5px;background:var(--amber-bg);color:var(--amber);padding:2px 7px;border-radius:4px;font-weight:500">📝 ${b.cateringNote}</span>`:'');
     return`<div class="pending-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
         <div style="flex:1;min-width:200px">
